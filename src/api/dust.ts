@@ -54,10 +54,14 @@ export const getDustInfo = async (stationName: string): Promise<DustItem | null>
         console.warn("Dust API returned error code:", json.response?.header);
       }
 
-      const items = json.response?.body?.items;
+      let items = json.response?.body?.items;
 
-      if (items && items.length > 0) {
-        return items[0] as DustItem;
+      // [공공데이터포털 특이사항] 결과가 1개일 때 배열이 아닌 객체로 오는 경우 대응
+      if (!items) return null;
+      const itemArray = Array.isArray(items) ? items : [items];
+
+      if (itemArray.length > 0) {
+        return itemArray[0] as DustItem;
       }
 
       console.warn("No dust data found for station:", stationName);
@@ -84,44 +88,42 @@ export const getNearbyStationWithDust = async (umdName: string, sidoName: string
     const tmUrl = `/api/tm-coord?umdName=${encodedUmd}`;
     const tmRes = await fetch(tmUrl);
     const tmJson = await tmRes.json();
-    const tmItems = tmJson.response?.body?.items || [];
 
-    if (tmItems.length === 0) {
-      console.warn(`[DustAPI] No TM coordinates found for: ${umdName}`);
-      return null;
-    }
+    let tmItemsRaw = tmJson.response?.body?.items;
+    if (!tmItemsRaw) return null;
+    const tmItems = Array.isArray(tmItemsRaw) ? tmItemsRaw : [tmItemsRaw];
+
+    if (tmItems.length === 0) return null;
 
     // 2. 현재 지역(sido, sgg)과 매칭되는 TM 좌표 찾기
-    // 복합 지명(창원시진해구)의 경우 부분 일치 여부로 유연하게 체크
     const sggClean = sggName.replace(/\s+/g, '');
     let matchedTM = tmItems.find((item: any) => {
+      if (!item.sidoName || !item.sggName) return false;
+      const itemSggClean = item.sggName.replace(/\s+/g, '');
       const isSidoMatch = (sidoName.includes(item.sidoName) || item.sidoName.includes(sidoName.slice(0, 2)));
-      const isSggMatch = (sggClean.includes(item.sggName) || item.sggName.includes(sggClean.replace(/시|구|군/g, '')));
+      const isSggMatch = (sggClean.includes(itemSggClean) || itemSggClean.includes(sggClean.replace(/시|구|군/g, '')));
       return isSidoMatch && isSggMatch;
     });
 
-    // 매칭되는 게 없으면 첫 번째 결과라도 사용 시도
     const finalTM = matchedTM || tmItems[0];
-
     if (!finalTM?.tmX || !finalTM?.tmY) return null;
 
     // 3. TM 좌표 -> 근처 측정소 목록 조회
     const nearbyUrl = `/api/nearby-station?tmX=${finalTM.tmX}&tmY=${finalTM.tmY}`;
     const nearbyRes = await fetch(nearbyUrl);
     const nearbyJson = await nearbyRes.json();
-    const stations = nearbyJson.response?.body?.items;
 
-    if (!stations || stations.length === 0) {
-      console.warn("[DustAPI] No nearby stations found");
-      return null;
-    }
+    let stationItemsRaw = nearbyJson.response?.body?.items;
+    if (!stationItemsRaw) return null;
+    const stations = Array.isArray(stationItemsRaw) ? stationItemsRaw : [stationItemsRaw];
 
-    // 3. 근처 측정소들을 순회하며 실제 데이터가 있는 곳 찾기 (최대 3곳)
+    if (stations.length === 0) return null;
+
+    // 4. 근처 측정소들을 순회하며 실제 데이터가 있는 곳 찾기 (최대 3곳)
     for (let i = 0; i < Math.min(stations.length, 3); i++) {
       const stationName = stations[i].stationName;
       const dustData = await getDustInfo(stationName);
       if (dustData && dustData.pm10Value && dustData.pm10Value !== '-') {
-        console.log(`[DustAPI] Found valid data at nearby station: ${stationName}`);
         return dustData;
       }
     }

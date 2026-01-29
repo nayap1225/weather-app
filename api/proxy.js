@@ -69,8 +69,21 @@ export default async function handler(req, res) {
 
   try {
     const apiRes = await fetch(finalUrl);
-    const data = await apiRes.json();
-    return res.status(apiRes.status).json(data);
+    const contentType = apiRes.headers.get('content-type');
+
+    if (contentType && contentType.includes('application/json')) {
+      const data = await apiRes.json();
+      return res.status(apiRes.status).json(data);
+    } else {
+      // JSON이 아닌 경우(XML, HTML 등) 텍스트로 읽어서 에러와 함께 반환
+      const text = await apiRes.text();
+      console.warn('[Proxy] Received non-JSON response:', text.slice(0, 100));
+      return res.status(apiRes.status).json({
+        error: 'Non-JSON Response from API',
+        status: apiRes.status,
+        preview: text.slice(0, 200)
+      });
+    }
   } catch (error) {
     console.error('[Proxy Error]', error);
     return res.status(500).json({ error: 'Proxy Request Failed', message: error.message });
