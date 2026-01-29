@@ -15,6 +15,7 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
   const [keyword, setKeyword] = useState('');
   const [results, setResults] = useState<Region[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const [selectedRegionName, setSelectedRegionName] = useState('');
   const [gpsLoading, setGpsLoading] = useState(false);
 
@@ -84,6 +85,7 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
   const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setKeyword(val);
+    setActiveIndex(-1); // 검색어 변경 시 인덱스 초기화
 
     if (val.length >= 2) {
       const searchResults = searchRegions(val);
@@ -101,13 +103,41 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
     setKeyword(region.name);
     setResults([]);
     setShowDropdown(false);
+    setActiveIndex(-1);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      setShowDropdown(false);
-      onSearch(); // 현재 설정된 좌표로 조회 실행
+    if (!showDropdown || results.length === 0) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        onSearch();
+      }
+      return;
+    }
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setActiveIndex(prev => (prev < results.length - 1 ? prev + 1 : prev));
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setActiveIndex(prev => (prev > 0 ? prev - 1 : -1));
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (activeIndex >= 0) {
+          handleSelectRegion(results[activeIndex]);
+          onSearch(results[activeIndex].nx, results[activeIndex].ny);
+        } else {
+          setShowDropdown(false);
+          onSearch();
+        }
+        break;
+      case 'Escape':
+        setShowDropdown(false);
+        setActiveIndex(-1);
+        break;
     }
   };
 
@@ -217,11 +247,12 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
 
           {showDropdown && results.length > 0 && (
             <ul className="absolute z-10 w-full bg-white border border-gray-100 rounded-lg shadow-xl mt-1 max-h-60 overflow-y-auto">
-              {results.map((region) => (
+              {results.map((region, index) => (
                 <li
                   key={region.code}
                   onClick={() => handleSelectRegion(region)}
-                  className="px-4 py-3 hover:bg-blue-50 cursor-pointer text-sm text-gray-700 border-b border-gray-50 last:border-none transition-colors"
+                  className={`px-4 py-3 cursor-pointer text-sm text-gray-700 border-b border-gray-50 last:border-none transition-colors
+                    ${index === activeIndex ? 'bg-blue-100 text-blue-700' : 'hover:bg-blue-50'}`}
                 >
                   {region.name}
                 </li>
