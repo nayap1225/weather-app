@@ -98,6 +98,7 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
   const handleSelectRegion = (region: Region) => {
     onLocationChange(region.nx, region.ny);
     setSelectedRegionName(region.name);
+    setKeyword(region.name);
     setResults([]);
     setShowDropdown(false);
   };
@@ -216,6 +217,7 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
             onChange={handleSearchInput}
             onKeyDown={handleKeyDown}
             onFocus={() => keyword.length >= 2 && setShowDropdown(true)}
+            autoComplete="off"
           />
 
           {showDropdown && results.length > 0 && (
