@@ -125,10 +125,13 @@ function App() {
           }
         }
 
-        // 3. 시도 명칭 처리 (예: "경기도 안산시" 인 경우 "안산"을 마지막 보루로 활용)
-        if (targetRegion.s1 && targetRegion.s2) {
-          const cityShort = targetRegion.s2.replace(/시.*$/, ''); // "안산시상록구" -> "안산"
-          if (cityShort && cityShort !== targetRegion.s2) stationCandidates.push(cityShort);
+        // 3. 시 단위 명칭 추가 (예: "안산시상록구" -> "안산시", "안산")
+        if (targetRegion.s2) {
+          const cityOnly = targetRegion.s2.replace(/([가-힣]+시).*/, '$1'); // "안산시"
+          if (cityOnly && cityOnly !== targetRegion.s2) {
+            stationCandidates.push(cityOnly);
+            stationCandidates.push(cityOnly.replace(/시$/, '')); // "안산"
+          }
         }
 
         // 특수 케이스 및 중복 제거

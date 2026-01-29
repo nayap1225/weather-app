@@ -97,16 +97,30 @@ export const getNearbyStationWithDust = async (umdName: string, sidoName: string
 
     // 2. 현재 지역(sido, sgg)과 매칭되는 TM 좌표 찾기
     const sggClean = sggName.replace(/\s+/g, '');
+    const sidoShort = sidoName.slice(0, 2); // '경기도' -> '경기', '서울특별시' -> '서울'
+
     let matchedTM = tmItems.find((item: any) => {
       if (!item.sidoName || !item.sggName) return false;
+      const itemSidoShort = item.sidoName.slice(0, 2);
       const itemSggClean = item.sggName.replace(/\s+/g, '');
-      const isSidoMatch = (sidoName.includes(item.sidoName) || item.sidoName.includes(sidoName.slice(0, 2)));
-      const isSggMatch = (sggClean.includes(itemSggClean) || itemSggClean.includes(sggClean.replace(/시|구|군/g, '')));
+
+      const isSidoMatch = (sidoShort === itemSidoShort);
+
+      // 시군구 매칭: '안산시상록구'가 '안산시'를 포함하거나, '상록구'가 포함되는지 등 유연하게 체크
+      const isSggMatch = (
+        sggClean.includes(itemSggClean) ||
+        itemSggClean.includes(sggClean.replace(/시|구|군/g, '')) ||
+        (sggClean.startsWith(itemSggClean.slice(0, 2))) // '안산시' vs '안산'
+      );
+
       return isSidoMatch && isSggMatch;
     });
 
     const finalTM = matchedTM || tmItems[0];
-    if (!finalTM?.tmX || !finalTM?.tmY) return null;
+    if (!finalTM?.tmX || !finalTM?.tmY) {
+      console.warn(`[DustAPI] No valid TM found for ${umdName} (Matched: ${!!matchedTM})`);
+      return null;
+    }
 
     // 3. TM 좌표 -> 근처 측정소 목록 조회
     const nearbyUrl = `/api/nearby-station?tmX=${finalTM.tmX}&tmY=${finalTM.tmY}`;
