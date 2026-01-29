@@ -3,37 +3,28 @@ import { usePWAInstall } from '../hooks/usePWAInstall';
 export default function InstallPrompt() {
   const { isInstallable, isStandalone, installPWA } = usePWAInstall();
 
-  // 이미 앱으로 실행 중(Standalone)이면 아무것도 보여주지 않음
-  if (isStandalone) return null;
+  // 현재 앱으로 실행 중이거나 설치가 불가능한 상태면 숨김
+  if (isStandalone || !isInstallable) return null;
 
   return (
-    <div className="mt-8 mb-4 p-5 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100 shadow-sm">
-      <div className="flex items-center gap-4 mb-3">
-        <div className="bg-white p-2 rounded-xl shadow-sm text-2xl">📱</div>
+    <div className="mt-8 mb-4 p-5 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl shadow-xl animate-fade-in text-white">
+      <div className="flex items-center gap-4 mb-4">
+        <div className="bg-white/20 p-2 rounded-xl text-2xl shadow-inner">📱</div>
         <div>
-          <h4 className="font-bold text-gray-800">앱으로 설치해서 사용하세요</h4>
-          <p className="text-xs text-gray-500 leading-relaxed">
-            바탕화면에 아이콘을 추가하면 <br />
-            매번 주소를 입력하지 않고 바로 확인할 수 있어요.
+          <h4 className="font-bold">앱으로 설치해서 사용하세요</h4>
+          <p className="text-xs opacity-90 leading-relaxed">
+            홈 화면에 고정하면 매번 주소를 입력하지 않고 <br />
+            실시간 날씨를 더 빠르고 편하게 볼 수 있어요!
           </p>
         </div>
       </div>
 
       <button
         onClick={installPWA}
-        className={`w-full py-3 rounded-xl font-bold transition-all shadow-md active:scale-[0.98] ${isInstallable
-          ? 'bg-blue-600 text-white hover:bg-blue-700'
-          : 'bg-white text-blue-600 border border-blue-200'
-          }`}
+        className="w-full py-3 bg-white text-blue-600 rounded-xl font-bold transition-all shadow-lg active:scale-[0.98] hover:bg-blue-50"
       >
-        {isInstallable ? '앱 설치하기' : '설치 방법 확인'}
+        앱 설치하기
       </button>
-
-      {!isInstallable && (
-        <p className="text-[10px] text-center text-gray-400 mt-2">
-          * 브라우저 메뉴에서 "홈 화면에 추가"를 눌러도 설치됩니다.
-        </p>
-      )}
     </div>
   );
 }
