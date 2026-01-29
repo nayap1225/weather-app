@@ -74,23 +74,24 @@ export const getDustInfo = async (stationName: string): Promise<DustItem | null>
 };
 
 /**
- * 좌표를 기반으로 가장 가까운 측정소를 찾아 미세먼지 정보를 가져옵니다.
- * [개선] 주소명 기반 검색이 실패할 경우(읍/면/리 등)를 대비한 2단계 폴백 로직
+ * 읍면동 명칭을 기반으로 가장 가까운 측정소를 찾아 미세먼지 정보를 가져옵니다.
+ * [개선] 위경도 기반 변환 대신 에어코리아에서 권장하는 읍면동명 기반 TM 좌표 변환 사용
  */
-export const getNearbyStationWithDust = async (lat: number, lng: number): Promise<DustItem | null> => {
+export const getNearbyStationWithDust = async (umdName: string): Promise<DustItem | null> => {
   try {
-    // 1. 위경도 -> TM 좌표 변환
-    const tmUrl = `/api/tm-coord?x=${lng}&y=${lat}`; // 에어코리아는 x가 경도, y가 위도
+    // 1. 읍면동명 -> TM 좌표 변환 (에어코리아 getTMStdrCrdnt 사용)
+    const encodedUmd = encodeURIComponent(umdName);
+    const tmUrl = `/api/tm-coord?umdName=${encodedUmd}`;
     const tmRes = await fetch(tmUrl);
     const tmJson = await tmRes.json();
     const tmData = tmJson.response?.body?.items?.[0];
 
     if (!tmData?.tmX || !tmData?.tmY) {
-      console.warn("[DustAPI] Failed to get TM coordinates");
+      console.warn(`[DustAPI] Failed to get TM coordinates for: ${umdName}`);
       return null;
     }
 
-    // 2. TM 좌표 -> 근처 측정소 목록 조회
+    // 2. TM 좌표 -> 근처 측정소 목록 조회 (에어코리아 getNearbyMsrstnList 사용)
     const nearbyUrl = `/api/nearby-station?tmX=${tmData.tmX}&tmY=${tmData.tmY}`;
     const nearbyRes = await fetch(nearbyUrl);
     const nearbyJson = await nearbyRes.json();

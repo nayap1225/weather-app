@@ -99,15 +99,21 @@ function App() {
       // 3. 미세먼지
       let dData: DustItem | null = null;
       if (targetRegion) {
-        // [1단계] 이름 기반 후보군 시도
+        // [1단계] 이름 기반 후보군 시도 (행정구역 명칭 유연화)
         const stationCandidates: string[] = [];
-        if (targetRegion.s3) stationCandidates.push(targetRegion.s3);
-        if (targetRegion.s2) stationCandidates.push(targetRegion.s2);
+        if (targetRegion.s3) stationCandidates.push(targetRegion.s3); // 예: 동이면
+        if (targetRegion.s2) {
+          stationCandidates.push(targetRegion.s2); // 예: 옥천군
+          // [개선] '군'이나 '시'를 뗀 명칭도 후보에 추가 (에어코리아 측정소는 '옥천'처럼 지명만 쓰는 경우가 많음)
+          const shortName = targetRegion.s2.replace(/(군|시)$/, '');
+          if (shortName !== targetRegion.s2) stationCandidates.push(shortName); // 예: 옥천
+        }
 
         if (targetRegion.s2 === '울릉군') {
           stationCandidates.push('울릉읍');
         }
 
+        // 우선순위: 구(Gu) 단위면 s2 우선, 나머지는 s3 우선
         const preferS2 = targetRegion.s2?.endsWith('구');
         const finalCandidates = preferS2
           ? [...stationCandidates].reverse()
@@ -126,19 +132,22 @@ function App() {
           }
         }
 
-        // [2단계] 여전히 데이터가 없다면 좌표 기반으로 가장 가까운 측정소 추적
-        // [개선] 이름 기반 검색이 안 되는 '리' 단위 마을이나 '독도' 등을 위해 
-        // 실제 위경도 좌표를 TM 좌표로 변환하여 근처 측정소를 실시간으로 찾아내는 지능형 로직 도입
+        // [2단계] 여전히 데이터가 없다면 읍면동명 기준으로 근처 측정소 자동 추적
+        // [개선] 옥천군 동이면처럼 측정소가 없는 곳은 '동이면'의 TM 좌표를 구해 근처 측정소를 실시간 추적
+        // 기존에는 TM 좌표를 위경도로 변환하여 근처 측정소를 찾았으나, 에어코리아 API는 행정구역명으로도 근처 측정소 추적이 가능함.
+        // 따라서, 불필요한 좌표 변환 없이 행정구역명(읍면동명)을 직접 사용하여 더 정확하고 효율적으로 측정소를 찾도록 변경.
         if (!dData) {
-          console.log("[App] No data by name, trying coordinate-based tracking...");
-          const { lat, lng } = dfs_grid_to_latlng(searchNx, searchNy);
+          console.log("[App] No data by name, trying coordinate-based tracking via UMD name...");
           try {
-            const nearbyResult = await getNearbyStationWithDust(lat, lng);
-            if (nearbyResult) {
-              dData = nearbyResult;
+            const umdName = targetRegion.s3 || targetRegion.s2 || "";
+            if (umdName) {
+              const nearbyResult = await getNearbyStationWithDust(umdName);
+              if (nearbyResult) {
+                dData = nearbyResult;
+              }
             }
           } catch (e) {
-            console.error("[App] Coordinate-based dust fetch failed:", e);
+            console.error("[App] UMD-based dust tracking failed:", e);
           }
         }
 
