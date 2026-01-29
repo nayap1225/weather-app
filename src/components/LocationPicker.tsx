@@ -205,6 +205,10 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
             onChange={handleSearchInput}
             onKeyDown={handleKeyDown}
             onFocus={() => keyword.length >= 2 && setShowDropdown(true)}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="none"
+            spellCheck="false"
           />
 
           {showDropdown && results.length > 0 && (
