@@ -192,14 +192,14 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
         <button
           onClick={handleCurrentLocation}
           disabled={gpsLoading || loading}
-          className={`p-2 rounded-lg border border-gray-200 text-gray-600 transition-colors
+          className={`p-2 w-32 rounded-lg border border-gray-200 text-gray-600 transition-colors flex items-center justify-center
               ${(gpsLoading || loading) ? 'bg-gray-100 cursor-not-allowed' : 'hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200'}`}
           title="내 현재 위치로 찾기"
         >
           {gpsLoading ? (
-            <span className="animate-spin block px-1 text-xs">↻</span>
+            <span className="animate-spin block px-1 text-xs text-blue-500 font-bold">↻ 찾고 있어요</span>
           ) : (
-            <span>📍 현재 위치</span>
+            <span className="text-sm">📍 현재 위치</span>
           )}
         </button>
       </div>
@@ -249,7 +249,7 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
             setShowDropdown(false);
           }}
           disabled={loading || gpsLoading}
-          className={`px-4 h-[50px] rounded-xl font-bold text-white transition-all whitespace-nowrap
+          className={`w-20 shrink-0 h-[50px] rounded-xl font-bold text-white transition-all whitespace-nowrap
             ${(loading || gpsLoading)
               ? 'bg-gray-400 cursor-not-allowed'
               : 'bg-blue-600 hover:bg-blue-700 shadow-md active:scale-95'
