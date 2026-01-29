@@ -102,44 +102,37 @@ function App() {
         // [1단계] 이름 기반 후보군 시도 (행정구역 명칭 유연화 및 복합 지명 분리)
         const stationCandidates: string[] = [];
 
-        // 1. 읍면동명 (최우선)
+        // 1. 읍면동명 (최우선순위: 가장 국소적인 데이터)
         if (targetRegion.s3) stationCandidates.push(targetRegion.s3);
 
         // 2. 시/군/구 명칭 처리 (복합 지명 대응)
         if (targetRegion.s2) {
-          stationCandidates.push(targetRegion.s2); // 전체 이름 (예: 창원시진해구)
-
-          // "창원시진해구" -> ["창원시", "진해구"] 분리 시도
           const parts = targetRegion.s2.match(/([가-힣]+시)([가-힣]+[구군])/);
           if (parts) {
             const city = parts[1]; // 창원시
             const district = parts[2]; // 진해구
             stationCandidates.push(district);
-            stationCandidates.push(city);
-
-            // "진해", "창원" 등 짧은 이름 추가
             stationCandidates.push(district.replace(/[구군]$/, ''));
+            stationCandidates.push(city);
             stationCandidates.push(city.replace(/시$/, ''));
           } else {
-            // 일반적인 경우 "옥천군" -> "옥천"
+            stationCandidates.push(targetRegion.s2);
             const shortName = targetRegion.s2.replace(/(시|군|구)$/, '');
             if (shortName !== targetRegion.s2) stationCandidates.push(shortName);
           }
         }
 
-        // 특수 케역 (울릉도/독도)
         if (targetRegion.s2?.includes('울릉')) {
           stationCandidates.push('울릉읍');
         }
 
-        // 중복 제거 및 유효성 검사
         const finalCandidates = Array.from(new Set(stationCandidates.filter(Boolean)));
 
         for (const name of finalCandidates) {
           if (!name) continue;
           try {
             const result = await getDustInfo(name);
-            if (result && result.pm10Value && result.pm10Value !== '-') {
+            if (result && result.pm10Value && result.pm10Value !== '-' && result.pm10Value !== '') {
               dData = result;
               break;
             }
@@ -149,8 +142,6 @@ function App() {
         }
 
         // [2단계] 여전히 데이터가 없다면 읍면동명 기준으로 근처 측정소 자동 추적
-        // [개선] 옥천군 동이면처럼 측정소가 없는 곳은 '동이면'의 TM 좌표를 구해 근처 측정소를 실시간 추적
-        // 동일 지명(예: 이동) 혼선을 막기 위해 시도명(s1)과 시군구명(s2)을 함께 전달하여 정밀 필터링
         if (!dData) {
           console.log("[App] No data by name, trying coordinate-based tracking via UMD name...");
           try {
@@ -165,7 +156,6 @@ function App() {
             console.error("[App] UMD-based dust tracking failed:", e);
           }
         }
-
         setDustData(dData);
       } else {
         setDustData(null);
@@ -183,9 +173,6 @@ function App() {
           setMidTaData(taRes);
         } catch (e) { console.error("MidTerm API failed", e); }
       }
-
-      // [선택] localStorage 저장은 유지하되, 초기 로딩 때 불러오지 않으므로 '히스토리' 용도로만 남음 (삭제해도 무방)
-      // 여기서는 굳이 저장하지 않아도 됨.
 
     } catch (err: any) {
       console.error(err);
