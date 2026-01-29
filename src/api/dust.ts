@@ -72,3 +72,47 @@ export const getDustInfo = async (stationName: string): Promise<DustItem | null>
     return null;
   }
 };
+
+/**
+ * 좌표를 기반으로 가장 가까운 측정소를 찾아 미세먼지 정보를 가져옵니다.
+ */
+export const getNearbyStationWithDust = async (lat: number, lng: number): Promise<DustItem | null> => {
+  try {
+    // 1. 위경도 -> TM 좌표 변환
+    const tmUrl = `/api/tm-coord?x=${lng}&y=${lat}`; // 에어코리아는 x가 경도, y가 위도
+    const tmRes = await fetch(tmUrl);
+    const tmJson = await tmRes.json();
+    const tmData = tmJson.response?.body?.items?.[0];
+
+    if (!tmData?.tmX || !tmData?.tmY) {
+      console.warn("[DustAPI] Failed to get TM coordinates");
+      return null;
+    }
+
+    // 2. TM 좌표 -> 근처 측정소 목록 조회
+    const nearbyUrl = `/api/nearby-station?tmX=${tmData.tmX}&tmY=${tmData.tmY}`;
+    const nearbyRes = await fetch(nearbyUrl);
+    const nearbyJson = await nearbyRes.json();
+    const stations = nearbyJson.response?.body?.items;
+
+    if (!stations || stations.length === 0) {
+      console.warn("[DustAPI] No nearby stations found");
+      return null;
+    }
+
+    // 3. 근처 측정소들을 순회하며 실제 데이터가 있는 곳 찾기 (최대 3곳)
+    for (let i = 0; i < Math.min(stations.length, 3); i++) {
+      const stationName = stations[i].stationName;
+      const dustData = await getDustInfo(stationName);
+      if (dustData && dustData.pm10Value && dustData.pm10Value !== '-') {
+        console.log(`[DustAPI] Found valid data at nearby station: ${stationName}`);
+        return dustData;
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error("[DustAPI] Error in getNearbyStationWithDust:", error);
+    return null;
+  }
+};

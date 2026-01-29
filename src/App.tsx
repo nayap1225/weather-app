@@ -99,36 +99,47 @@ function App() {
       // 3. 미세먼지
       let dData: DustItem | null = null;
       if (targetRegion) {
-        // [개선] 측정소 후보군 생성
+        // [1단계] 이름 기반 후보군 시도
         const stationCandidates: string[] = [];
-
         if (targetRegion.s3) stationCandidates.push(targetRegion.s3);
         if (targetRegion.s2) stationCandidates.push(targetRegion.s2);
 
-        // 울릉도/독도 특수 처리 (측정소가 울릉읍에 있음)
         if (targetRegion.s2 === '울릉군') {
           stationCandidates.push('울릉읍');
         }
 
-        // 우선순위 결정: 구(Gu) 단위면 s2 우선, 그 외(시/군/도서)는 s3 우선
         const preferS2 = targetRegion.s2?.endsWith('구');
         const finalCandidates = preferS2
           ? [...stationCandidates].reverse()
           : stationCandidates;
 
-        // 유효한 데이터가 나올 때까지 후보군 시도
         for (const name of finalCandidates) {
           if (!name) continue;
           try {
             const result = await getDustInfo(name);
-            if (result) {
+            if (result && result.pm10Value && result.pm10Value !== '-') {
               dData = result;
               break;
             }
           } catch (e) {
-            console.error(`Dust fetch failed for ${name}:`, e);
+            console.error(`Dust name fetch failed for ${name}:`, e);
           }
         }
+
+        // [2단계] 여전히 데이터가 없다면 좌표 기반으로 가장 가까운 측정소 추적
+        if (!dData) {
+          console.log("[App] No data by name, trying coordinate-based tracking...");
+          const { lat, lng } = dfs_grid_to_latlng(searchNx, searchNy);
+          try {
+            const nearbyResult = await getNearbyStationWithDust(lat, lng);
+            if (nearbyResult) {
+              dData = nearbyResult;
+            }
+          } catch (e) {
+            console.error("[App] Coordinate-based dust fetch failed:", e);
+          }
+        }
+
         setDustData(dData);
       } else {
         setDustData(null);

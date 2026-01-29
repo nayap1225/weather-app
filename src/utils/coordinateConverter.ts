@@ -54,3 +54,52 @@ export const dfs_xy_conv = (lat: number, lng: number): GridCoord => {
 
   return { nx, ny };
 };
+
+/**
+ * 기상청 격자 좌표(NX, NY)를 위도(lat), 경도(lng)로 변환합니다.
+ */
+export const dfs_grid_to_latlng = (nx: number, ny: number): LatLng => {
+  const DEGRAD = Math.PI / 180.0;
+  const RADDEG = 180.0 / Math.PI;
+
+  const re = RE / GRID;
+  const slat1 = SLAT1 * DEGRAD;
+  const slat2 = SLAT2 * DEGRAD;
+  const olon = OLON * DEGRAD;
+  const olat = OLAT * DEGRAD;
+
+  let sn = Math.tan(Math.PI * 0.25 + slat2 * 0.5) / Math.tan(Math.PI * 0.25 + slat1 * 0.5);
+  sn = Math.log(Math.cos(slat1) / Math.cos(slat2)) / Math.log(sn);
+
+  let sf = Math.tan(Math.PI * 0.25 + slat1 * 0.5);
+  sf = (Math.pow(sf, sn) * Math.cos(slat1)) / sn;
+
+  let ro = Math.tan(Math.PI * 0.25 + olat * 0.5);
+  ro = (re * sf) / Math.pow(ro, sn);
+
+  const xn = nx - XO;
+  const yn = ro - ny + YO;
+  let ra = Math.sqrt(xn * xn + yn * yn);
+  if (sn < 0.0) ra = -ra;
+
+  let alat = Math.pow((re * sf) / ra, 1.0 / sn);
+  alat = 2.0 * Math.atan(alat) - Math.PI * 0.5;
+
+  let theta = 0.0;
+  if (Math.abs(xn) <= 0.0) {
+    theta = 0.0;
+  } else {
+    if (Math.abs(yn) <= 0.0) {
+      theta = Math.PI * 0.5;
+      if (xn < 0.0) theta = -theta;
+    } else {
+      theta = Math.atan2(xn, yn);
+    }
+  }
+
+  const alon = theta / sn + olon;
+  return {
+    lat: alat * RADDEG,
+    lng: alon * RADDEG,
+  };
+};
