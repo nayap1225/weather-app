@@ -41,8 +41,20 @@ export default async function handler(req, res) {
   // 나머지 쿼리 파라미터 복사 (serviceKey 제외)
   const params = new URLSearchParams(url.search);
   params.delete('serviceKey');
-  if (!params.has('dataType') && !pathname.includes('/api/dust')) params.set('dataType', 'JSON');
-  if (pathname.includes('/api/dust') && !params.has('returnType')) params.set('returnType', 'json');
+
+  // [중요] 기본 파라미터 보강 (Vite Proxy 설정과 동일하게)
+  if (!params.has('pageNo')) params.set('pageNo', '1');
+
+  if (pathname.includes('/api/weather') || pathname.includes('/api/forecast')) {
+    if (!params.has('numOfRows')) params.set('numOfRows', '1000');
+    if (!params.has('dataType')) params.set('dataType', 'JSON');
+  } else if (pathname.includes('/api/mid-')) {
+    if (!params.has('numOfRows')) params.set('numOfRows', '10');
+    if (!params.has('dataType')) params.set('dataType', 'JSON');
+  } else if (pathname.includes('/api/dust')) {
+    if (!params.has('numOfRows')) params.set('numOfRows', '1');
+    if (!params.has('returnType')) params.set('returnType', 'json');
+  }
 
   // URL 조립 (serviceKey는 인코딩 이슈 방지를 위해 직접 템플릿 리터럴로 붙임)
   const finalUrl = `${targetBaseUrl}?serviceKey=${serviceKey}&${params.toString()}`;
