@@ -98,7 +98,6 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
   const handleSelectRegion = (region: Region) => {
     onLocationChange(region.nx, region.ny);
     setSelectedRegionName(region.name);
-    setKeyword('');
     setResults([]);
     setShowDropdown(false);
   };
