@@ -187,28 +187,39 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm mb-6 w-full max-w-sm mx-auto relative" ref={wrapperRef}>
-      <h2 className="text-lg font-bold text-gray-800 mb-4">위치 설정</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-bold text-gray-800">위치 설정</h2>
+        <button
+          onClick={handleCurrentLocation}
+          disabled={gpsLoading || loading}
+          className={`p-2 rounded-lg border border-gray-200 text-gray-600 transition-colors
+              ${(gpsLoading || loading) ? 'bg-gray-100 cursor-not-allowed' : 'hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200'}`}
+          title="내 현재 위치로 찾기"
+        >
+          {gpsLoading ? (
+            <span className="animate-spin block px-1 text-xs">↻</span>
+          ) : (
+            <span>📍 현재 위치</span>
+          )}
+        </button>
+      </div>
 
-      <div className="mb-4 text-sm text-blue-600 font-medium bg-blue-50 p-3 rounded-lg flex items-center gap-2">
+      <div className="mb-6 text-sm text-blue-600 font-medium bg-blue-50 p-3 rounded-lg flex items-center gap-2">
         <span>📍</span>
         <span>{selectedRegionName || `위치 좌표: ${nx}, ${ny}`}</span>
       </div>
 
-      <div className="relative mb-4 flex gap-2">
+      <div className="relative flex gap-2 items-end">
         <div className="flex-1 relative">
           <span className="block text-sm text-gray-500 mb-1">지역 검색 (동 단위)</span>
           <input
             type="text"
-            placeholder="예: 종로구, 역삼동 (입력 후 엔터)"
+            placeholder="예: 역삼동 (입력 후 엔터)"
             className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             value={keyword}
             onChange={handleSearchInput}
             onKeyDown={handleKeyDown}
             onFocus={() => keyword.length >= 2 && setShowDropdown(true)}
-            autoComplete="off"
-            autoCorrect="off"
-            autoCapitalize="none"
-            spellCheck="false"
           />
 
           {showDropdown && results.length > 0 && (
@@ -232,34 +243,18 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
           )}
         </div>
 
-        <div className="flex flex-col justify-end">
-          <button
-            onClick={handleCurrentLocation}
-            disabled={gpsLoading || loading}
-            className={`p-3 rounded-lg border border-gray-200 text-gray-600 transition-colors h-[50px]
-                ${(gpsLoading || loading) ? 'bg-gray-100 cursor-not-allowed' : 'hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200'}`}
-            title="내 현재 위치로 찾기"
-          >
-            {gpsLoading ? (
-              <span className="animate-spin block">↻</span>
-            ) : (
-              <span>📍</span>
-            )}
-          </button>
-        </div>
+        <button
+          onClick={() => onSearch()}
+          disabled={loading || gpsLoading}
+          className={`px-4 h-[50px] rounded-xl font-bold text-white transition-all whitespace-nowrap
+            ${(loading || gpsLoading)
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-blue-600 hover:bg-blue-700 shadow-md active:scale-95'
+            }`}
+        >
+          {loading ? '...' : '조회'}
+        </button>
       </div>
-
-      <button
-        onClick={() => onSearch()}
-        disabled={loading || gpsLoading}
-        className={`w-full py-3 rounded-xl font-bold text-white transition-all
-          ${(loading || gpsLoading)
-            ? 'bg-gray-400 cursor-not-allowed'
-            : 'bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg active:scale-95'
-          }`}
-      >
-        {loading ? '조회 중...' : '날씨 조회'}
-      </button>
     </div>
   );
 }
