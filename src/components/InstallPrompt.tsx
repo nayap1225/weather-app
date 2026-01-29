@@ -1,10 +1,41 @@
 import { usePWAInstall } from '../hooks/usePWAInstall';
 
 export default function InstallPrompt() {
-  const { isInstallable, isStandalone, installPWA } = usePWAInstall();
+  const { isInstallable, isStandalone, isIOS, installPWA } = usePWAInstall();
 
-  // 현재 앱으로 실행 중이거나 설치가 불가능한 상태면 숨김
-  if (isStandalone || !isInstallable) return null;
+  // 이미 앱으로 실행 중이면 숨김
+  if (isStandalone) return null;
+
+  // iOS/Safari 환경인 경우 (자동 설치 API 미지원으로 수동 가이드 노출)
+  if (isIOS) {
+    return (
+      <div className="mt-8 mb-4 p-5 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl shadow-xl animate-fade-in text-white">
+        <div className="flex items-center gap-4 mb-3">
+          <div className="bg-white/20 p-2 rounded-xl text-2xl shadow-inner">🍎</div>
+          <div>
+            <h4 className="font-bold text-base">iPhone 설치 방법</h4>
+            <p className="text-xs opacity-90 leading-relaxed">
+              사파리 브라우저에서 아래 과정을 따라주세요!
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-black/10 border border-white/10 rounded-xl p-3 text-sm space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="bg-white/20 w-5 h-5 rounded-full flex items-center justify-center text-[10px]">1</span>
+            <span>하단 <b>공유 버튼</b>( <span className="text-lg">⎋</span> )을 클릭</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="bg-white/20 w-5 h-5 rounded-full flex items-center justify-center text-[10px]">2</span>
+            <span>스크롤을 내려 <b>'홈 화면에 추가'</b> 클릭</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 안드로이드/크롬 등 자동 설치 가능한 경우
+  if (!isInstallable) return null;
 
   return (
     <div className="mt-8 mb-4 p-5 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl shadow-xl animate-fade-in text-white">

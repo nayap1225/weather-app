@@ -19,6 +19,7 @@ export const usePWAInstall = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(capturedPrompt);
   const [isInstallable, setIsInstallable] = useState(!!capturedPrompt);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
     // 현재 독립 실행형(앱) 모드인지 확인
@@ -29,7 +30,16 @@ export const usePWAInstall = () => {
       setIsStandalone(isStandaloneMode);
     };
 
+    // iOS 여부 확인
+    const checkIOS = () => {
+      const userAgent = window.navigator.userAgent.toLowerCase();
+      const isIPhoneOrIPad = /iphone|ipad|ipod/.test(userAgent) ||
+        (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
+      setIsIOS(isIPhoneOrIPad);
+    };
+
     checkStandalone();
+    checkIOS();
 
     const handler = (e: any) => {
       e.preventDefault();
@@ -85,5 +95,5 @@ export const usePWAInstall = () => {
     }
   };
 
-  return { isInstallable, isStandalone, installPWA };
+  return { isInstallable, isStandalone, isIOS, installPWA };
 };
