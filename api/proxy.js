@@ -62,8 +62,8 @@ export default async function handler(req, res) {
     if (!params.has('returnType')) params.set('returnType', 'json');
   }
 
-  // URL 조립 (serviceKey는 인코딩 이슈 방지를 위해 직접 템플릿 리터럴로 붙임)
-  const finalUrl = `${targetBaseUrl}?serviceKey=${serviceKey}&${params.toString()}`;
+  // URL 조립 (serviceKey는 인코딩 이슈 방지를 위해 encodeURIComponent 적용)
+  const finalUrl = `${targetBaseUrl}?serviceKey=${encodeURIComponent(serviceKey)}&${params.toString()}`;
 
   console.log(`[Proxy] Forwarding to: ${targetBaseUrl}`);
 
