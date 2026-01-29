@@ -95,15 +95,24 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
   const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setKeyword(val);
-    setActiveIndex(-1); // 검색어 변경 시 인덱스 초기화
+    setActiveIndex(-1);
 
-    if (val.length >= 2) {
+    if (val.length >= 1) { // 1글자부터 바로 검색되도록 수정하여 반응성 개선
       const searchResults = searchRegions(val);
       setResults(searchResults);
       setShowDropdown(true);
     } else {
       setResults([]);
       setShowDropdown(false);
+    }
+  };
+
+  const handleFocus = () => {
+    if (keyword.length >= 1) {
+      const searchResults = searchRegions(keyword);
+      setResults(searchResults);
+      setShowDropdown(true);
+      setActiveIndex(-1);
     }
   };
 
@@ -246,12 +255,12 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
           <span className="block text-sm text-gray-500 mb-1">지역 검색 (동 단위)</span>
           <input
             type="text"
-            placeholder="예: 역삼동 (입력 후 엔터)"
+            placeholder="동, 읍, 면 단위로 검색 (예: 역삼동)"
             className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             value={keyword}
             onChange={handleSearchInput}
             onKeyDown={handleKeyDown}
-            onFocus={() => keyword.length >= 2 && setShowDropdown(true)}
+            onFocus={handleFocus}
             autoComplete="off"
           />
 

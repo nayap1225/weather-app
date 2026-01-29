@@ -12,7 +12,7 @@ import { getDustInfo, getNearbyStationWithDust } from './api/dust';
 import { findAllRegionsByNxNy } from './utils/regionUtils';
 import { getMidTermCode } from './data/midTermCodes';
 import { mergeForecastData } from './utils/dailyForecastUtils';
-import { dfs_xy_conv, dfs_grid_to_latlng } from './utils/coordinateConverter';
+import { dfs_xy_conv } from './utils/coordinateConverter';
 import type { WeatherItem, MidLandItem, MidTaItem } from './api/weather';
 import type { DustItem } from './api/dust';
 

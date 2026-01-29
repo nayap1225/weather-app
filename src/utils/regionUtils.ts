@@ -16,32 +16,38 @@ export const searchRegions = (keyword: string, limit: number = 30): Region[] => 
     return [];
   }
 
-  const normalizedKeyword = keyword.trim().replace(/\s+/g, ''); // 공백 제거 후 비교
+  const normalizedKeyword = keyword.trim().replace(/\s+/g, '');
 
-  // "독산동" 입력 시 "독산제1동"도 검색되도록 하기 위해 "동"을 뗀 키워드 준비
-  let looseKeyword = '';
-  if (normalizedKeyword.length > 1 && normalizedKeyword.endsWith('동')) {
-    looseKeyword = normalizedKeyword.slice(0, -1); // "독산"
-  }
+  // 1. 실제 사용자가 선택할 '동/읍/면' 단위가 있는 데이터만 필터링 (노이즈 제거)
+  const candidates = allRegions.filter(region => {
+    if (!region.s3) return false; // 읍/면/동 정보가 없으면 제외 (구/시 단위 검색 방지)
 
-  // 동 단위(s3) 정보가 있는 구체적인 지역 우선, 혹은 구 단위까지 검색
-  return allRegions
-    .filter(region => {
-      // 1. 최소한 시/군/구(s2) 정보는 있어야 의미있는 검색 결과
-      if (!region.s2) return false;
+    const s3Name = region.s3.replace(/\s+/g, '');
+    const fullName = region.name.replace(/\s+/g, '');
 
-      const normalizedName = region.name.replace(/\s+/g, '');
+    return s3Name.includes(normalizedKeyword) || fullName.includes(normalizedKeyword);
+  });
 
-      // A. 정확히 포함되는 경우 (기본)
-      if (normalizedName.includes(normalizedKeyword)) return true;
+  // 2. 가중치 기반 정렬 (사용자 의도에 가장 가까운 순서)
+  return candidates
+    .sort((a, b) => {
+      const aS3 = a.s3.replace(/\s+/g, '');
+      const bS3 = b.s3.replace(/\s+/g, '');
 
-      // B. "OO동" -> "OO"로 검색 시, 동 이름(s3)에 "OO"이 포함되는지 확인
-      // 예: "독산동" -> "독산" -> "독산제1동" (매칭)
-      if (looseKeyword && region.s3 && region.s3.includes(looseKeyword)) {
-        return true;
-      }
+      // A. 읍/면/동 이름이 검색어로 시작하는 경우 최우선 (예: '이동' -> '이동' 먼저, '이화동' 뒤로)
+      const aStartsWith = aS3.startsWith(normalizedKeyword);
+      const bStartsWith = bS3.startsWith(normalizedKeyword);
+      if (aStartsWith && !bStartsWith) return -1;
+      if (!aStartsWith && bStartsWith) return 1;
 
-      return false;
+      // B. 읍/면/동 이름이 검색어와 정확히 일치하는 경우 우선
+      if (aS3 === normalizedKeyword && bS3 !== normalizedKeyword) return -1;
+      if (aS3 !== normalizedKeyword && bS3 === normalizedKeyword) return 1;
+
+      // C. 읍/면/동 이름 길이기 짧은 순 (더 명확한 검색 결과)
+      if (aS3.length !== bS3.length) return aS3.length - bS3.length;
+
+      return 0;
     })
     .slice(0, limit);
 };
