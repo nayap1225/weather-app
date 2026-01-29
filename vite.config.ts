@@ -23,6 +23,9 @@ export default defineConfig(({ mode }) => {
           short_name: 'Weather',
           description: 'Weather Information App',
           theme_color: '#ffffff',
+          background_color: '#ffffff',
+          display: 'standalone',
+          start_url: '/',
           icons: [
             {
               src: 'pwa-192x192.png',
