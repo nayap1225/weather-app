@@ -53,7 +53,7 @@ function App() {
           console.warn(`[GPS Init] Failed or denied: ${err.message}`);
           handleSearch(60, 127);
         },
-        { timeout: 10000 }
+        { timeout: 10000 } // [개선] GPS 응답 대기 시간을 10초로 늘려 안정성 확보
       );
     } else {
       // GPS 미지원 브라우저: 기본값 검색
@@ -127,6 +127,8 @@ function App() {
         }
 
         // [2단계] 여전히 데이터가 없다면 좌표 기반으로 가장 가까운 측정소 추적
+        // [개선] 이름 기반 검색이 안 되는 '리' 단위 마을이나 '독도' 등을 위해 
+        // 실제 위경도 좌표를 TM 좌표로 변환하여 근처 측정소를 실시간으로 찾아내는 지능형 로직 도입
         if (!dData) {
           console.log("[App] No data by name, trying coordinate-based tracking...");
           const { lat, lng } = dfs_grid_to_latlng(searchNx, searchNy);

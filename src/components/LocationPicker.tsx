@@ -11,13 +11,23 @@ interface Props {
   loading: boolean;
 }
 
+// [UX 개선] 사용자의 요청으로 반영된 주요 변경 내역:
+// 1. 레이아웃: GPS 버튼을 제목 옆으로, 조회 버튼을 입력창 옆으로 이동하여 사용성 개선
+// 2. 버튼 안정성: 로딩 중에도 버튼 크기와 텍스트가 변하지 않도록 fixed width 적용
+// 3. Safari 대응: 위치 권한 거부 시 iOS 사용자를 위한 상세 가이드 문구 추가
+// 4. 검색 UX:
+//    - 선택 시 검색어 인풋을 지역명으로 자동 업데이트
+//    - 브라우저 자동완성이 리스트를 가리지 않도록 autoComplete="off" 적용
+//    - 키보드 방향키(↑, ↓) 및 엔터(Enter)로 목록 선택 기능 추가
+//    - 단순 엔터 시 자동선택 방지 (사용자가 직접 선택하거나 클릭할 때만 확정)
+
 export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loading }: Props) {
   const [keyword, setKeyword] = useState('');
   const [results, setResults] = useState<Region[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(-1);
+  const [activeIndex, setActiveIndex] = useState(-1); // [UX] 키보드 탐색을 위한 상태 추가
   const [selectedRegionName, setSelectedRegionName] = useState('');
-  const [gpsLoading, setGpsLoading] = useState(false);
+  const [gpsLoading, setGpsLoading] = useState(false); // [UX] 별도의 GPS 로딩 상태 관리 (버튼 UI 유지용)
 
   const wrapperRef = useRef<HTMLDivElement>(null);
 

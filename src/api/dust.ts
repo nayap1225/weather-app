@@ -75,6 +75,7 @@ export const getDustInfo = async (stationName: string): Promise<DustItem | null>
 
 /**
  * 좌표를 기반으로 가장 가까운 측정소를 찾아 미세먼지 정보를 가져옵니다.
+ * [개선] 주소명 기반 검색이 실패할 경우(읍/면/리 등)를 대비한 2단계 폴백 로직
  */
 export const getNearbyStationWithDust = async (lat: number, lng: number): Promise<DustItem | null> => {
   try {

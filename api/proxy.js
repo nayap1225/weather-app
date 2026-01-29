@@ -31,10 +31,10 @@ export default async function handler(req, res) {
   } else if (pathname.includes('/api/mid-ta')) { // 중기기온
     targetBaseUrl = 'https://apis.data.go.kr/1360000/MidFcstInfoService/getMidTa';
     serviceKey = WEATHER_KEY;
-  } else if (pathname.includes('/api/tm-coord')) { // [추가] TM 좌표 변환
+  } else if (pathname.includes('/api/tm-coord')) { // [개선] 미세먼지 사각지대 해소를 위한 TM 좌표 변환
     targetBaseUrl = 'https://apis.data.go.kr/B552584/MsrstnInforInqireSvc/getTMStdrCrdnt';
     serviceKey = DUST_KEY;
-  } else if (pathname.includes('/api/nearby-station')) { // [추가] 근처 측정소 검색
+  } else if (pathname.includes('/api/nearby-station')) { // [개선] 좌표 기반 근처 측정소 목록 조회
     targetBaseUrl = 'https://apis.data.go.kr/B552584/MsrstnInforInqireSvc/getNearbyMsrstnList';
     serviceKey = DUST_KEY;
   } else if (pathname.includes('/api/dust')) { // 측정소별 실시간 측정정보 조회

@@ -3,7 +3,11 @@ import { usePWAInstall } from '../hooks/usePWAInstall';
 export default function InstallPrompt() {
   const { isInstallable, isStandalone, isIOS, installPWA } = usePWAInstall();
 
-  // 이미 앱으로 실행 중이면 숨김
+  // [PWA 고도화] 
+  // 1. 이미 앱으로 실행 중이면 UI 숨김 (isStandalone)
+  // 2. iOS/Safari: 자동 설치 API 미지원으로 인해 "공유 -> 홈 화면에 추가" 수동 가이드 노출
+  // 3. 기타(안드로이드/크롬): 브라우저 기본 설치 팝업 트리거 버튼 제공
+
   if (isStandalone) return null;
 
   // iOS/Safari 환경인 경우 (자동 설치 API 미지원으로 수동 가이드 노출)

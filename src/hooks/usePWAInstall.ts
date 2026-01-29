@@ -19,7 +19,7 @@ export const usePWAInstall = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(capturedPrompt);
   const [isInstallable, setIsInstallable] = useState(!!capturedPrompt);
   const [isStandalone, setIsStandalone] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
+  const [isIOS, setIsIOS] = useState(false); // [추가] iOS/Safari 수동 설치 가이드 제공을 위한 상태
 
   useEffect(() => {
     // 현재 독립 실행형(앱) 모드인지 확인
