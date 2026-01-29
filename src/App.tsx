@@ -53,7 +53,7 @@ function App() {
           console.warn(`[GPS Init] Failed or denied: ${err.message}`);
           handleSearch(60, 127);
         },
-        { timeout: 5000 }
+        { timeout: 10000 }
       );
     } else {
       // GPS 미지원 브라우저: 기본값 검색

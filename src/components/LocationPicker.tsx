@@ -163,12 +163,24 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
       },
       (error) => {
         console.error(error);
-        alert("위치 정보를 가져올 수 없습니다. 권한을 확인해주세요.");
+        if (error.code === error.PERMISSION_DENIED) {
+          alert(
+            "위치 권한이 거부되었습니다. 🔒\n\n" +
+            "Safari/iOS 사용자라면 아래 설정을 확인해주세요:\n" +
+            "1. 아이폰 [설정 > 개인정보 보호 > 위치 서비스]가 '켬'인지 확인\n" +
+            "2. 하단 리스트에서 [Safari 웹 사이트]를 찾아 '앱을 사용하는 동안'으로 변경\n\n" +
+            "이미 거부하셨다면 브라우저 주소창 왼쪽의 [Aa] 또는 [설정] 아이콘을 눌러 위치 권한을 다시 허용해주세요."
+          );
+        } else if (error.code === error.TIMEOUT) {
+          alert("위치 정보를 가져오는 데 시간이 너무 오래 걸립니다. 신호가 좋은 곳에서 다시 시도해주세요.");
+        } else {
+          alert("위치 정보를 가져올 수 없습니다. 권한을 확인해주세요.");
+        }
         setGpsLoading(false);
       },
       {
         enableHighAccuracy: true,
-        timeout: 5000,
+        timeout: 10000,
         maximumAge: 0
       }
     );
