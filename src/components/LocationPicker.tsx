@@ -106,13 +106,8 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (results.length > 0) {
-        const target = results[0];
-        handleSelectRegion(target);
-        onSearch(target.nx, target.ny);
-      } else if (keyword.length > 0) {
-        alert('검색된 지역이 없습니다. 올바른 지역명(동 단위)을 입력해주세요.');
-      }
+      setShowDropdown(false);
+      onSearch(); // 현재 설정된 좌표로 조회 실행
     }
   };
 
