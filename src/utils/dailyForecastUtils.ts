@@ -57,7 +57,10 @@ export const mergeForecastData = (
 
     grouped.forEach(item => {
       if (!dailyMap.has(item.date)) dailyMap.set(item.date, []);
-      dailyMap.get(item.date).push(item);
+      const group = dailyMap.get(item.date);
+      if (group) {
+        group.push(item);
+      }
     });
 
     dailyMap.forEach((gItems, date) => {

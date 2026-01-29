@@ -107,9 +107,6 @@ function App() {
       }
 
       // 4. 중기 예보
-      let mLand: MidLandItem | null = null;
-      let mTa: MidTaItem | null = null;
-
       if (cityRegion) {
         const codes = getMidTermCode(cityRegion.s1);
         try {
@@ -119,8 +116,6 @@ function App() {
           ]);
           setMidLandData(landRes);
           setMidTaData(taRes);
-          mLand = landRes;
-          mTa = taRes; // 로컬 변수 업데이트
         } catch (e) { console.error("MidTerm API failed", e); }
       }
 

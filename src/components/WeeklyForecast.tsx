@@ -1,5 +1,5 @@
-import { useRef } from 'react';
 import type { DailyForecast } from '../utils/dailyForecastUtils';
+
 
 interface Props {
   dailyData: DailyForecast[];

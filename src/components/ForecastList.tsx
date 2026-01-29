@@ -1,5 +1,4 @@
 import { groupForecastItems, getWeatherIcon } from '../utils/weatherUtils';
-import type { ForecastGroup } from '../utils/weatherUtils';
 import type { WeatherItem } from '../api/weather';
 
 interface Props {
