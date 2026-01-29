@@ -99,25 +99,41 @@ function App() {
       // 3. 미세먼지
       let dData: DustItem | null = null;
       if (targetRegion) {
-        // [1단계] 이름 기반 후보군 시도 (행정구역 명칭 유연화)
+        // [1단계] 이름 기반 후보군 시도 (행정구역 명칭 유연화 및 복합 지명 분리)
         const stationCandidates: string[] = [];
-        if (targetRegion.s3) stationCandidates.push(targetRegion.s3); // 예: 동이면
+
+        // 1. 읍면동명 (최우선)
+        if (targetRegion.s3) stationCandidates.push(targetRegion.s3);
+
+        // 2. 시/군/구 명칭 처리 (복합 지명 대응)
         if (targetRegion.s2) {
-          stationCandidates.push(targetRegion.s2); // 예: 옥천군
-          // [개선] '군'이나 '시'를 뗀 명칭도 후보에 추가 (에어코리아 측정소는 '옥천'처럼 지명만 쓰는 경우가 많음)
-          const shortName = targetRegion.s2.replace(/(군|시)$/, '');
-          if (shortName !== targetRegion.s2) stationCandidates.push(shortName); // 예: 옥천
+          stationCandidates.push(targetRegion.s2); // 전체 이름 (예: 창원시진해구)
+
+          // "창원시진해구" -> ["창원시", "진해구"] 분리 시도
+          const parts = targetRegion.s2.match(/([가-힣]+시)([가-힣]+[구군])/);
+          if (parts) {
+            const city = parts[1]; // 창원시
+            const district = parts[2]; // 진해구
+            stationCandidates.push(district);
+            stationCandidates.push(city);
+
+            // "진해", "창원" 등 짧은 이름 추가
+            stationCandidates.push(district.replace(/[구군]$/, ''));
+            stationCandidates.push(city.replace(/시$/, ''));
+          } else {
+            // 일반적인 경우 "옥천군" -> "옥천"
+            const shortName = targetRegion.s2.replace(/(시|군|구)$/, '');
+            if (shortName !== targetRegion.s2) stationCandidates.push(shortName);
+          }
         }
 
-        if (targetRegion.s2 === '울릉군') {
+        // 특수 케역 (울릉도/독도)
+        if (targetRegion.s2?.includes('울릉')) {
           stationCandidates.push('울릉읍');
         }
 
-        // 우선순위: 구(Gu) 단위면 s2 우선, 나머지는 s3 우선
-        const preferS2 = targetRegion.s2?.endsWith('구');
-        const finalCandidates = preferS2
-          ? [...stationCandidates].reverse()
-          : stationCandidates;
+        // 중복 제거 및 유효성 검사
+        const finalCandidates = Array.from(new Set(stationCandidates.filter(Boolean)));
 
         for (const name of finalCandidates) {
           if (!name) continue;
@@ -134,14 +150,13 @@ function App() {
 
         // [2단계] 여전히 데이터가 없다면 읍면동명 기준으로 근처 측정소 자동 추적
         // [개선] 옥천군 동이면처럼 측정소가 없는 곳은 '동이면'의 TM 좌표를 구해 근처 측정소를 실시간 추적
-        // 기존에는 TM 좌표를 위경도로 변환하여 근처 측정소를 찾았으나, 에어코리아 API는 행정구역명으로도 근처 측정소 추적이 가능함.
-        // 따라서, 불필요한 좌표 변환 없이 행정구역명(읍면동명)을 직접 사용하여 더 정확하고 효율적으로 측정소를 찾도록 변경.
+        // 동일 지명(예: 이동) 혼선을 막기 위해 시도명(s1)과 시군구명(s2)을 함께 전달하여 정밀 필터링
         if (!dData) {
           console.log("[App] No data by name, trying coordinate-based tracking via UMD name...");
           try {
             const umdName = targetRegion.s3 || targetRegion.s2 || "";
             if (umdName) {
-              const nearbyResult = await getNearbyStationWithDust(umdName);
+              const nearbyResult = await getNearbyStationWithDust(umdName, targetRegion.s1, targetRegion.s2);
               if (nearbyResult) {
                 dData = nearbyResult;
               }

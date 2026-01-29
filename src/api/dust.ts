@@ -75,24 +75,38 @@ export const getDustInfo = async (stationName: string): Promise<DustItem | null>
 
 /**
  * 읍면동 명칭을 기반으로 가장 가까운 측정소를 찾아 미세먼지 정보를 가져옵니다.
- * [개선] 위경도 기반 변환 대신 에어코리아에서 권장하는 읍면동명 기반 TM 좌표 변환 사용
+ * [개선] 동일 지명(예: 이동) 중 현재 지역과 일치하는 TM 좌표를 정밀 선택하도록 필터링 강화
  */
-export const getNearbyStationWithDust = async (umdName: string): Promise<DustItem | null> => {
+export const getNearbyStationWithDust = async (umdName: string, sidoName: string, sggName: string): Promise<DustItem | null> => {
   try {
-    // 1. 읍면동명 -> TM 좌표 변환 (에어코리아 getTMStdrCrdnt 사용)
+    // 1. 읍면동명 -> TM 좌표 목록 조회
     const encodedUmd = encodeURIComponent(umdName);
     const tmUrl = `/api/tm-coord?umdName=${encodedUmd}`;
     const tmRes = await fetch(tmUrl);
     const tmJson = await tmRes.json();
-    const tmData = tmJson.response?.body?.items?.[0];
+    const tmItems = tmJson.response?.body?.items || [];
 
-    if (!tmData?.tmX || !tmData?.tmY) {
-      console.warn(`[DustAPI] Failed to get TM coordinates for: ${umdName}`);
+    if (tmItems.length === 0) {
+      console.warn(`[DustAPI] No TM coordinates found for: ${umdName}`);
       return null;
     }
 
-    // 2. TM 좌표 -> 근처 측정소 목록 조회 (에어코리아 getNearbyMsrstnList 사용)
-    const nearbyUrl = `/api/nearby-station?tmX=${tmData.tmX}&tmY=${tmData.tmY}`;
+    // 2. 현재 지역(sido, sgg)과 매칭되는 TM 좌표 찾기
+    // 복합 지명(창원시진해구)의 경우 부분 일치 여부로 유연하게 체크
+    const sggClean = sggName.replace(/\s+/g, '');
+    let matchedTM = tmItems.find((item: any) => {
+      const isSidoMatch = (sidoName.includes(item.sidoName) || item.sidoName.includes(sidoName.slice(0, 2)));
+      const isSggMatch = (sggClean.includes(item.sggName) || item.sggName.includes(sggClean.replace(/시|구|군/g, '')));
+      return isSidoMatch && isSggMatch;
+    });
+
+    // 매칭되는 게 없으면 첫 번째 결과라도 사용 시도
+    const finalTM = matchedTM || tmItems[0];
+
+    if (!finalTM?.tmX || !finalTM?.tmY) return null;
+
+    // 3. TM 좌표 -> 근처 측정소 목록 조회
+    const nearbyUrl = `/api/nearby-station?tmX=${finalTM.tmX}&tmY=${finalTM.tmY}`;
     const nearbyRes = await fetch(nearbyUrl);
     const nearbyJson = await nearbyRes.json();
     const stations = nearbyJson.response?.body?.items;
