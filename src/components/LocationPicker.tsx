@@ -244,7 +244,10 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
         </div>
 
         <button
-          onClick={() => onSearch()}
+          onClick={() => {
+            onSearch();
+            setShowDropdown(false);
+          }}
           disabled={loading || gpsLoading}
           className={`px-4 h-[50px] rounded-xl font-bold text-white transition-all whitespace-nowrap
             ${(loading || gpsLoading)
