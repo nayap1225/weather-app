@@ -99,8 +99,17 @@ function App() {
       // 3. 미세먼지
       let dData: DustItem | null = null;
       if (targetRegion) {
+        // [수정] 측정소 이름 선정 로직 개선
+        // 제주도나 구가 없는 지역은 s2(시 이름)가 측정소 이름이 아닌 경우가 많음.
+        // 이 경우 s3(동 이름)을 우선 사용해보고, 없으면 s2 사용.
+        let stationName = targetRegion.s2;
+        if (targetRegion.s1 === '제주특별자치도' || !targetRegion.s2 || targetRegion.s2.endsWith('시')) {
+          // 제주도는 동 단위(s3)가 실제 측정소인 경우가 많으므로 s3 우선 시도
+          stationName = targetRegion.s3 || targetRegion.s2;
+        }
+
         try {
-          dData = await getDustInfo(targetRegion.s2);
+          dData = await getDustInfo(stationName);
           setDustData(dData);
         } catch (e) { console.error(e); }
       } else {
