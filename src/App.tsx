@@ -102,30 +102,37 @@ function App() {
         // [1단계] 이름 기반 후보군 시도 (행정구역 명칭 유연화 및 복합 지명 분리)
         const stationCandidates: string[] = [];
 
-        // 1. 읍면동명 (최우선순위: 가장 국소적인 데이터)
+        // 1. 읍면동명 (최우선순위)
         if (targetRegion.s3) stationCandidates.push(targetRegion.s3);
 
         // 2. 시/군/구 명칭 처리 (복합 지명 대응)
         if (targetRegion.s2) {
-          const parts = targetRegion.s2.match(/([가-힣]+시)([가-힣]+[구군])/);
-          if (parts) {
-            const city = parts[1]; // 창원시
-            const district = parts[2]; // 진해구
-            stationCandidates.push(district);
-            stationCandidates.push(district.replace(/[구군]$/, ''));
-            stationCandidates.push(city);
-            stationCandidates.push(city.replace(/시$/, ''));
+          stationCandidates.push(targetRegion.s2); // 전체 이름 (예: 안산시상록구)
+
+          // "안산시상록구" -> ["안산시", "상록구"] 또는 "포항시북구" -> ["포항시", "북구"]
+          const complexMatch = targetRegion.s2.match(/^([가-힣]+시)([가-힣]+[구군])$/);
+          if (complexMatch) {
+            const city = complexMatch[1];
+            const gu = complexMatch[2];
+            stationCandidates.push(gu); // 상록구
+            stationCandidates.push(city); // 안산시
+            stationCandidates.push(gu.replace(/[구군]$/, '')); // 상록
+            stationCandidates.push(city.replace(/시$/, '')); // 안산
           } else {
-            stationCandidates.push(targetRegion.s2);
+            // "진해구" -> "진해"
             const shortName = targetRegion.s2.replace(/(시|군|구)$/, '');
             if (shortName !== targetRegion.s2) stationCandidates.push(shortName);
           }
         }
 
-        if (targetRegion.s2?.includes('울릉')) {
-          stationCandidates.push('울릉읍');
+        // 3. 시도 명칭 처리 (예: "경기도 안산시" 인 경우 "안산"을 마지막 보루로 활용)
+        if (targetRegion.s1 && targetRegion.s2) {
+          const cityShort = targetRegion.s2.replace(/시.*$/, ''); // "안산시상록구" -> "안산"
+          if (cityShort && cityShort !== targetRegion.s2) stationCandidates.push(cityShort);
         }
 
+        // 특수 케이스 및 중복 제거
+        if (targetRegion.s2?.includes('울릉')) stationCandidates.push('울릉읍');
         const finalCandidates = Array.from(new Set(stationCandidates.filter(Boolean)));
 
         for (const name of finalCandidates) {
