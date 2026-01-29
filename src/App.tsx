@@ -6,6 +6,7 @@ import DustCard from './components/DustCard';
 import ItemCard from './components/ItemCard';
 import ForecastList from './components/ForecastList';
 import WeeklyForecast from './components/WeeklyForecast';
+import InstallPrompt from './components/InstallPrompt';
 import { getUltraSrtNcst, getVilageFcst, getMidLandFcst, getMidTa } from './api/weather';
 import { getDustInfo } from './api/dust';
 import { findAllRegionsByNxNy } from './utils/regionUtils';
@@ -181,6 +182,7 @@ function App() {
             <ForecastList data={forecastData} />
 
             <WeeklyForecast dailyData={weeklyData} />
+            <InstallPrompt />
           </>
         )}
 
