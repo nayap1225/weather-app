@@ -5,9 +5,9 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  // .env 파일 로드 (VITE_WEATHER_API_KEY 사용을 위해)
+  // .env 파일 로드
   const env = loadEnv(mode, process.cwd(), '');
-  const SERVICE_KEY = env.VITE_WEATHER_API_KEY;
+  const WEATHER_KEY = env.VITE_WEATHER_API_KEY;
 
   return {
     plugins: [
@@ -40,22 +40,63 @@ export default defineConfig(({ mode }) => {
     ],
     server: {
       proxy: {
-        '/api/weather': { // 프론트와 동일한 경로
+        '/api/weather': {
           target: 'https://apis.data.go.kr',
           changeOrigin: true,
           secure: false,
           rewrite: (path) => {
-            // path: /api/weather?nx=...
-
-            // 쿼리 스트링 추출
             const queryString = path.split('?')[1] || '';
             const baseApiUrl = '/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst';
-
-            // 로컬 개발 시에는 Vite Proxy가 "백엔드 역할"을 수행하여 키를 주입
-            return `${baseApiUrl}?serviceKey=${SERVICE_KEY}&dataType=JSON&pageNo=1&numOfRows=1000&${queryString}`;
+            return `${baseApiUrl}?serviceKey=${encodeURIComponent(WEATHER_KEY)}&dataType=JSON&pageNo=1&numOfRows=1000&${queryString}`;
+          }
+        },
+        '/api/forecast': {
+          target: 'https://apis.data.go.kr',
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => {
+            const queryString = path.split('?')[1] || '';
+            // 단기예보 조회 서비스
+            const baseApiUrl = '/1360000/VilageFcstInfoService_2.0/getVilageFcst';
+            return `${baseApiUrl}?serviceKey=${encodeURIComponent(WEATHER_KEY)}&dataType=JSON&pageNo=1&numOfRows=1000&${queryString}`;
+          }
+        },
+        '/api/mid-land': {
+          target: 'https://apis.data.go.kr',
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => {
+            const queryString = path.split('?')[1] || '';
+            // 중기 육상 예보
+            const baseApiUrl = '/1360000/MidFcstInfoService/getMidLandFcst';
+            return `${baseApiUrl}?serviceKey=${encodeURIComponent(WEATHER_KEY)}&dataType=JSON&pageNo=1&numOfRows=10&${queryString}`;
+          }
+        },
+        '/api/mid-ta': {
+          target: 'https://apis.data.go.kr',
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => {
+            const queryString = path.split('?')[1] || '';
+            // 중기 기온 예보
+            const baseApiUrl = '/1360000/MidFcstInfoService/getMidTa';
+            return `${baseApiUrl}?serviceKey=${encodeURIComponent(WEATHER_KEY)}&dataType=JSON&pageNo=1&numOfRows=10&${queryString}`;
+          }
+        },
+        '/api/dust-proxy': {
+          target: 'https://apis.data.go.kr',
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => {
+            // path: /api/dust-proxy?serviceKey=...&stationName=...
+            // 이를 /B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty?... 로 변경
+            const queryString = path.split('?')[1] || '';
+            const baseApiUrl = '/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty';
+            return `${baseApiUrl}?${queryString}`;
           }
         }
       }
     }
   }
 })
+

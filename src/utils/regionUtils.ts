@@ -45,3 +45,18 @@ export const searchRegions = (keyword: string, limit: number = 30): Region[] => 
     })
     .slice(0, limit);
 };
+
+/**
+ * NX, NY 좌표에 해당하는 지역 정보를 반환 (역추적)
+ * 격자 좌표 특성상 여러 동이 같은 좌표를 공유할 수 있으므로, 첫 번째 매칭되는 지역을 반환함.
+ */
+export const findRegionByNxNy = (nx: number, ny: number): Region | undefined => {
+  return allRegions.find(region => region.nx === nx && region.ny === ny);
+};
+
+/**
+ * NX, NY 좌표를 공유하는 모든 지역 리스트 반환
+ */
+export const findAllRegionsByNxNy = (nx: number, ny: number): Region[] => {
+  return allRegions.filter(region => region.nx === nx && region.ny === ny);
+};
