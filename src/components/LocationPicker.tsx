@@ -30,6 +30,7 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
   const [gpsLoading, setGpsLoading] = useState(false); // [UX] 별도의 GPS 로딩 상태 관리 (버튼 UI 유지용)
 
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -91,6 +92,16 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
       setSelectedRegionName(matched[0].name);
     }
   }, [nx, ny]); // selectedRegionName은 의존성에서 제외 (무한루프 방지)
+
+  // [추가] 키보드 탐색 시 해당 항목으로 스크롤 자동 이동
+  useEffect(() => {
+    if (activeIndex >= 0 && listRef.current) {
+      const activeItem = listRef.current.children[activeIndex] as HTMLElement;
+      if (activeItem) {
+        activeItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    }
+  }, [activeIndex]);
 
   const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -265,7 +276,10 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
           />
 
           {showDropdown && results.length > 0 && (
-            <ul className="absolute z-10 w-full bg-white border border-gray-100 rounded-lg shadow-xl mt-1 max-h-60 overflow-y-auto">
+            <ul
+              ref={listRef}
+              className="absolute z-10 w-full bg-white border border-gray-100 rounded-lg shadow-xl mt-1 max-h-60 overflow-y-auto"
+            >
               {results.map((region, index) => (
                 <li
                   key={region.code}
