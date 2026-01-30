@@ -16,18 +16,10 @@ export interface DustItem {
 export const getDustInfo = async (stationName: string): Promise<DustItem | null> => {
   console.log(`[DustAPI] getDustInfo called with: ${stationName}`);
 
-  const apiKey = import.meta.env.VITE_DUST_API_KEY;
-  if (!apiKey) {
-    console.error("[DustAPI] VITE_DUST_API_KEY is missing in .env.local!");
-    return null;
-  }
-
-  // 공공데이터포털 Decoding Key는 특수문자(+, / 등)를 포함하므로 URL 인코딩 필수
-  const encodedKey = encodeURIComponent(apiKey);
   const encodedName = encodeURIComponent(stationName);
 
-  // 프록시 URL
-  const url = `/api/dust-proxy?serviceKey=${encodedKey}&returnType=json&numOfRows=1&pageNo=1&stationName=${encodedName}&dataTerm=DAILY&ver=1.0`;
+  // 프록시 URL (serviceKey는 서버에서 주입하므로 클라이언트에서는 제외)
+  const url = `/api/dust?returnType=json&numOfRows=1&pageNo=1&stationName=${encodedName}&dataTerm=DAILY&ver=1.0`;
 
   try {
     const res = await fetch(url);

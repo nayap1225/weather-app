@@ -40,10 +40,10 @@ export default async function handler(req, res) {
   } else if (pathname.includes('/api/nearby-station')) { // [개선] 좌표 기반 근처 측정소 목록 조회
     targetBaseUrl = 'https://apis.data.go.kr/B552584/MsrstnInfoInqireSvc/getNearbyMsrstnList';
     serviceKey = DUST_KEY;
-  } else if (pathname.includes('/api/sido-dust')) { // 시도별 실시간 측정정보 조회
+  } else if (pathname.endsWith('/api/sido-dust')) { // 시도별 실시간 측정정보 조회
     targetBaseUrl = 'https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty';
     serviceKey = DUST_KEY;
-  } else if (pathname.includes('/api/dust')) { // 측정소별 실시간 측정정보 조회
+  } else if (pathname.endsWith('/api/dust') || pathname.endsWith('/api/dust-proxy')) { // 측정소별 실시간 측정정보 조회
     targetBaseUrl = 'https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty';
     serviceKey = DUST_KEY;
   } else {
