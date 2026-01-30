@@ -86,9 +86,20 @@ export const getNearbyStationWithDust = async (umdName: string, sidoName: string
     const fetchTM = async (name: string) => {
       const encoded = encodeURIComponent(name);
       const res = await fetch(`/api/tm-coord?umdName=${encoded}`);
-      const json = await res.json();
-      const raw = json.response?.body?.items;
-      return Array.isArray(raw) ? raw : (raw ? [raw] : []);
+      const text = await res.text();
+
+      if (text.includes("Forbidden") || text.includes("SERVICE_KEY_IS_NOT_REGISTERED_ERROR")) {
+        console.error("[DustAPI] TM Coord API is Forbidden! Please check if 'MsrstnInfoInqireSvc' is approved in Data.go.kr");
+        return [];
+      }
+
+      try {
+        const json = JSON.parse(text);
+        const raw = json.response?.body?.items;
+        return Array.isArray(raw) ? raw : (raw ? [raw] : []);
+      } catch (e) {
+        return [];
+      }
     };
     const findMatchedTM = (items: any[]) => {
       const sShort = sidoName.slice(0, 2);
@@ -127,7 +138,20 @@ export const getNearbyStationWithDust = async (umdName: string, sidoName: string
     // 4. 근처 측정소 조회 및 데이터 페칭
     const nearbyUrl = `/api/nearby-station?tmX=${finalTM.tmX}&tmY=${finalTM.tmY}`;
     const nearbyRes = await fetch(nearbyUrl);
-    const nearbyJson = await nearbyRes.json();
+    const nearbyText = await nearbyRes.text();
+
+    if (nearbyText.includes("Forbidden") || nearbyText.includes("SERVICE_KEY_IS_NOT_REGISTERED_ERROR")) {
+      console.error("[DustAPI] Nearby Station API is Forbidden!");
+      return null;
+    }
+
+    let nearbyJson;
+    try {
+      nearbyJson = JSON.parse(nearbyText);
+    } catch (e) {
+      console.error("[DustAPI] Failed to parse nearby station JSON:", nearbyText);
+      return null;
+    }
 
     let stationItemsRaw = nearbyJson.response?.body?.items;
     if (!stationItemsRaw) {
@@ -183,13 +207,29 @@ export const getDustInfoBySgg = async (sidoName: string, sggName: string, neighb
       return null;
     }
 
-    // 1. 시군구 명칭이 포함된 측정소 우선 (예: '안산', '안산시')
-    // 2. 해당 시군구 내의 행정동 명칭과 일치하는 측정소 검색
+    // [예외 대응] 시군구명과 측정소명이 완전히 다른 지역들을 위한 수동 매핑 테이블
+    const manualMapping: Record<string, string[]> = {
+      '안산시상록구': ['본오동', '부곡동1', '부곡3동'],
+      '안산시단원구': ['고잔동', '원시동', '호수동', '대부동', '중앙대로'],
+      '안산시': ['고잔동', '본오동', '부곡동1', '원시동'],
+      '세종특별자치시': ['세종', '조치원', '아름동', '신흥동'],
+      '세종시': ['세종', '조치원', '아름동', '신흥동'],
+      '제주시': ['이도동', '연동', '노형동'],
+      '서귀포시': ['동홍동', '강정동', '성산읍']
+    };
+
+    const targetManualStations = manualMapping[sggClean] || [];
+
     const matchedItem = items.find(item => {
       const stationName = item.stationName;
-      // 시군구 명칭 직접 매칭 (예: 안산시상록구 -> '상록' 포함 여부)
-      const isSggMatch = (sggClean.includes(stationName) || stationName.includes(sggClean.replace(/시|구|군/g, '')));
-      // 행정동 리스트와 매칭
+
+      // 1. 수동 매핑 확인 (안산 등)
+      if (targetManualStations.some(s => stationName.includes(s))) return true;
+
+      // 2. 시군구 명칭 직접 매칭 (기존 로직)
+      const isSggMatch = (sggClean.includes(stationName) || (stationName.length > 1 && sggClean.includes(stationName.replace(/시|구|군/g, ''))));
+
+      // 3. 행정동 리스트와 매칭
       const isNeighborhoodMatch = neighborhoodNames.includes(stationName);
 
       return isSggMatch || isNeighborhoodMatch;
