@@ -117,7 +117,7 @@ export default defineConfig(({ mode }) => {
           rewrite: (path) => {
             const queryString = path.split('?')[1] || '';
             const baseApiUrl = '/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty';
-            return `${baseApiUrl}?serviceKey=${encodeURIComponent(DUST_KEY)}&returnType=json&${queryString}`;
+            return `${baseApiUrl}?serviceKey=${encodeURIComponent(DUST_KEY)}&returnType=json&numOfRows=200&${queryString}`;
           }
         },
         '/api/dust': {
