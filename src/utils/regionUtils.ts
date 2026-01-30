@@ -66,3 +66,17 @@ export const findRegionByNxNy = (nx: number, ny: number): Region | undefined => 
 export const findAllRegionsByNxNy = (nx: number, ny: number): Region[] => {
   return allRegions.filter(region => region.nx === nx && region.ny === ny);
 };
+
+/**
+ * 특정 시도(s1)와 시군구(s2)에 속한 모든 하위 지역(읍면동) 리스트 반환
+ */
+export const getRegionsInSgg = (s1: string, s2: string): Region[] => {
+  const s1Short = s1.slice(0, 2);
+  const s2Clean = s2.replace(/\s+/g, '');
+
+  return allRegions.filter(region => {
+    const rS1Short = region.s1.slice(0, 2);
+    const rS2Clean = region.s2.replace(/\s+/g, '');
+    return rS1Short === s1Short && rS2Clean.includes(s2Clean);
+  });
+};

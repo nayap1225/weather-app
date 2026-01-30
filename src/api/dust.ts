@@ -158,3 +158,51 @@ export const getNearbyStationWithDust = async (umdName: string, sidoName: string
     return null;
   }
 };
+
+/**
+ * 시도별 실시간 측정정보 전체를 가져와서 해당 시군구(SGG)에 속한 측정소 데이터를 찾습니다.
+ * TM 좌표 조회가 불가능하거나(Forbidden), 지명 매칭이 어려운 경우를 위한 최종 폴백입니다.
+ */
+export const getDustInfoBySgg = async (sidoName: string, sggName: string, neighborhoodNames: string[]): Promise<DustItem | null> => {
+  console.log(`[DustAPI] getDustInfoBySgg called for ${sidoName} ${sggName}`);
+
+  const sidoShort = sidoName.slice(0, 2);
+  const sggClean = sggName.replace(/\s+/g, '');
+  const encodedSido = encodeURIComponent(sidoShort);
+
+  // ver=1.3: PM10, PM2.5 1시간 등급 정보 포함
+  const url = `/api/sido-dust?sidoName=${encodedSido}&searchCondition=HOUR&ver=1.3`;
+
+  try {
+    const res = await fetch(url);
+    const json = await res.json();
+    const items = json.response?.body?.items;
+
+    if (!items || !Array.isArray(items)) {
+      console.warn(`[DustAPI] No items found in Sido-wide search for ${sidoShort}`);
+      return null;
+    }
+
+    // 1. 시군구 명칭이 포함된 측정소 우선 (예: '안산', '안산시')
+    // 2. 해당 시군구 내의 행정동 명칭과 일치하는 측정소 검색
+    const matchedItem = items.find(item => {
+      const stationName = item.stationName;
+      // 시군구 명칭 직접 매칭 (예: 안산시상록구 -> '상록' 포함 여부)
+      const isSggMatch = (sggClean.includes(stationName) || stationName.includes(sggClean.replace(/시|구|군/g, '')));
+      // 행정동 리스트와 매칭
+      const isNeighborhoodMatch = neighborhoodNames.includes(stationName);
+
+      return isSggMatch || isNeighborhoodMatch;
+    });
+
+    if (matchedItem) {
+      console.log(`[DustAPI] Found matching station in Sido-wide list: ${matchedItem.stationName}`);
+      return matchedItem as DustItem;
+    }
+
+    return null;
+  } catch (error) {
+    console.error("[DustAPI] Error in getDustInfoBySgg:", error);
+    return null;
+  }
+};

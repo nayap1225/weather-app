@@ -8,13 +8,14 @@ import ForecastList from './components/ForecastList';
 import WeeklyForecast from './components/WeeklyForecast';
 import InstallPrompt from './components/InstallPrompt';
 import { getUltraSrtNcst, getVilageFcst, getMidLandFcst, getMidTa } from './api/weather';
-import { getDustInfo, getNearbyStationWithDust } from './api/dust';
-import { findAllRegionsByNxNy } from './utils/regionUtils';
+import { getDustInfo, getNearbyStationWithDust, getDustInfoBySgg } from './api/dust';
+import { findAllRegionsByNxNy, getRegionsInSgg } from './utils/regionUtils';
 import { getMidTermCode } from './data/midTermCodes';
 import { mergeForecastData } from './utils/dailyForecastUtils';
 import { dfs_xy_conv } from './utils/coordinateConverter';
 import type { WeatherItem, MidLandItem, MidTaItem } from './api/weather';
 import type { DustItem } from './api/dust';
+import type { Region } from './types/region';
 
 function App() {
   // 초기값: 서울 종로구 (기본)
@@ -164,6 +165,22 @@ function App() {
             }
           } catch (e) {
             console.error("[App] UMD-based dust tracking failed:", e);
+          }
+        }
+
+        // [3단계] 여전히 데이터가 없다면 해당 시군구(SGG) 전체 측정소 리스트에서 검색 (최종 폴백)
+        if (!dData) {
+          console.log("[App] No data by UMD tracking, trying SGG-wide search...");
+          try {
+            const neighbors = getRegionsInSgg(targetRegion.s1, targetRegion.s2);
+            const neighborNames = Array.from(new Set(neighbors.map((r: Region) => r.s3).filter(Boolean)));
+
+            const sggResult = await getDustInfoBySgg(targetRegion.s1, targetRegion.s2, neighborNames);
+            if (sggResult) {
+              dData = sggResult;
+            }
+          } catch (e) {
+            console.error("[App] SGG-wide dust tracking failed:", e);
           }
         }
         setDustData(dData);
