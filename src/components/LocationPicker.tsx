@@ -40,6 +40,10 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
+
+    // [신규] 앱 접속 시 자동으로 현재 위치 시도
+    handleCurrentLocation();
+
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
@@ -217,26 +221,21 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
         setGpsLoading(false);
       },
       (error) => {
-        console.error(error);
-        if (error.code === error.PERMISSION_DENIED) {
-          alert(
-            "위치 권한이 거부되었습니다. 🔒\n\n" +
-            "Safari/iOS 사용자라면 아래 설정을 확인해주세요:\n" +
-            "1. 아이폰 [설정 > 개인정보 보호 > 위치 서비스]가 '켬'인지 확인\n" +
-            "2. 하단 리스트에서 [Safari 웹 사이트]를 찾아 '앱을 사용하는 동안'으로 변경\n\n" +
-            "이미 거부하셨다면 브라우저 주소창 왼쪽의 [Aa] 또는 [설정] 아이콘을 눌러 위치 권한을 다시 허용해주세요."
-          );
-        } else if (error.code === error.TIMEOUT) {
-          alert("위치 정보를 가져오는 데 시간이 너무 오래 걸립니다. 신호가 좋은 곳에서 다시 시도해주세요.");
-        } else {
-          alert("위치 정보를 가져올 수 없습니다. 권한을 확인해주세요.");
-        }
+        console.error("[GPS] Error:", error);
+
+        // [폴백] 권한 거부나 에러 시 기본값(서울 종로구)으로 검색 수행
+        onSearch(60, 127);
+        onLocationChange(60, 127);
         setGpsLoading(false);
+
+        if (error.code === error.PERMISSION_DENIED) {
+          console.warn("위치 권한이 거부되었습니다. 기본 위치(종로구)로 시작합니다.");
+        }
       },
       {
-        enableHighAccuracy: true,
+        enableHighAccuracy: false, // 배터리 절약 및 응답 속도 향상 위해 false 권장 (Reverse Geocoding엔 충분)
         timeout: 10000,
-        maximumAge: 0
+        maximumAge: 3600000 // 1시간 이내 기록 재사용 허용 (속도 향상)
       }
     );
   };

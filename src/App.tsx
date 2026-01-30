@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import LocationPicker from './components/LocationPicker';
 import WeatherNowCard from './components/WeatherNowCard';
 import OutfitCard from './components/OutfitCard';
@@ -12,7 +12,6 @@ import { getDustInfo, getNearbyStationWithDust, getDustInfoBySgg } from './api/d
 import { findAllRegionsByNxNy, getRegionsInSgg } from './utils/regionUtils';
 import { getMidTermCode } from './data/midTermCodes';
 import { mergeForecastData } from './utils/dailyForecastUtils';
-import { dfs_xy_conv } from './utils/coordinateConverter';
 import type { WeatherItem, MidLandItem, MidTaItem } from './api/weather';
 import type { DustItem } from './api/dust';
 import type { Region } from './types/region';
@@ -33,40 +32,6 @@ function App() {
   const [dustLoading, setDustLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // [변경] 초기 로딩 시 GPS 시도
-  useEffect(() => {
-    // 브라우저 위치 정보 요청
-    if (navigator.geolocation) {
-      setLoading(true); // 로딩 표시
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          // 허용 시: 현재 위치로 설정
-          const { latitude, longitude } = position.coords;
-          const { nx, ny } = dfs_xy_conv(latitude, longitude);
-
-          console.log(`[GPS Init] Found location: ${latitude}, ${longitude} -> ${nx}, ${ny}`);
-          setNx(nx);
-          setNy(ny);
-          handleSearch(nx, ny); // 찾은 위치로 바로 검색
-        },
-        (err) => {
-          // 거부/에러 시: 기본값(종로구)으로 검색
-          console.warn(`[GPS Init] Failed or denied: ${err.message}`);
-          handleSearch(60, 127);
-        },
-        { timeout: 10000 } // [개선] GPS 응답 대기 시간을 10초로 늘려 안정성 확보
-      );
-    } else {
-      // GPS 미지원 브라우저: 기본값 검색
-      handleSearch(60, 127);
-    }
-  }, []); // 빈 배열: 최초 1회만 실행
-
-  // localStorage 저장/로드 로직 중 '로드'는 삭제하고 '저장'은 선택사항 (여기서는 삭제하거나 유지해도 됨)
-  // 사용자가 원한건 "리로드 했을 때 내 위치"이므로 저장된 값은 무시하는게 맞음.
-
-  // ... handleSearch 및 기타 로직
-  // (아래 전체 교체에서 상세 구현)
 
   const handleSearch = async (targetNx?: number, targetNy?: number) => {
     setLoading(true);

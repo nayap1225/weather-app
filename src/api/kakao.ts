@@ -14,19 +14,24 @@ export const getAddressFromCoords = async (lat: number, lng: number): Promise<st
     }
 
     const data = await res.json();
+    console.log("[KakaoAPI] Response data:", data);
 
-    // 카카오 응답 구조: documents[0].address (지번) 또는 .road_address (도로명)
-    // 행정동 정보가 있는 .address 사용 선호
     if (data.documents && data.documents.length > 0) {
       const doc = data.documents[0];
       const addr = doc.address;
 
       if (addr) {
-        // "경기도 안산시 상록구 안산동" 형태 구성
         return `${addr.region_1depth_name} ${addr.region_2depth_name} ${addr.region_3depth_name}`;
+      }
+
+      // 도로명 주소 폴백
+      if (doc.road_address) {
+        const r = doc.road_address;
+        return `${r.region_1depth_name} ${r.region_2depth_name} ${r.road_name}`;
       }
     }
 
+    console.warn("[KakaoAPI] No address found in documents");
     return null;
   } catch (error) {
     console.error("[KakaoAPI] Error getting address from coords:", error);

@@ -8,6 +8,11 @@ export default defineConfig(({ mode }) => {
   // .env 파일 로드
   const env = loadEnv(mode, process.cwd(), '');
   const WEATHER_KEY = env.VITE_WEATHER_API_KEY;
+  const DUST_KEY = env.VITE_DUST_API_KEY;
+  const KAKAO_KEY = env.VITE_KAKAO_API_KEY;
+
+  console.log(`[ViteConfig] Keys loaded: Weather(${!!WEATHER_KEY}), Dust(${!!DUST_KEY}), Kakao(${!!KAKAO_KEY})`);
+  if (KAKAO_KEY) console.log(`[ViteConfig] Kakao Key starts with: ${KAKAO_KEY.slice(0, 4)}...`);
 
   return {
     plugins: [
@@ -61,7 +66,6 @@ export default defineConfig(({ mode }) => {
           secure: false,
           rewrite: (path) => {
             const queryString = path.split('?')[1] || '';
-            // 단기예보 조회 서비스
             const baseApiUrl = '/1360000/VilageFcstInfoService_2.0/getVilageFcst';
             return `${baseApiUrl}?serviceKey=${encodeURIComponent(WEATHER_KEY)}&dataType=JSON&pageNo=1&numOfRows=1000&${queryString}`;
           }
@@ -72,7 +76,6 @@ export default defineConfig(({ mode }) => {
           secure: false,
           rewrite: (path) => {
             const queryString = path.split('?')[1] || '';
-            // 중기 육상 예보
             const baseApiUrl = '/1360000/MidFcstInfoService/getMidLandFcst';
             return `${baseApiUrl}?serviceKey=${encodeURIComponent(WEATHER_KEY)}&dataType=JSON&pageNo=1&numOfRows=10&${queryString}`;
           }
@@ -83,21 +86,60 @@ export default defineConfig(({ mode }) => {
           secure: false,
           rewrite: (path) => {
             const queryString = path.split('?')[1] || '';
-            // 중기 기온 예보
             const baseApiUrl = '/1360000/MidFcstInfoService/getMidTa';
             return `${baseApiUrl}?serviceKey=${encodeURIComponent(WEATHER_KEY)}&dataType=JSON&pageNo=1&numOfRows=10&${queryString}`;
           }
         },
-        '/api/dust-proxy': {
+        '/api/tm-coord': {
           target: 'https://apis.data.go.kr',
           changeOrigin: true,
           secure: false,
           rewrite: (path) => {
-            // path: /api/dust-proxy?serviceKey=...&stationName=...
-            // 이를 /B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty?... 로 변경
+            const queryString = path.split('?')[1] || '';
+            const baseApiUrl = '/B552584/MsrstnInfoInqireSvc/getTMStdrCrdnt';
+            return `${baseApiUrl}?serviceKey=${encodeURIComponent(DUST_KEY)}&returnType=json&${queryString}`;
+          }
+        },
+        '/api/nearby-station': {
+          target: 'https://apis.data.go.kr',
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => {
+            const queryString = path.split('?')[1] || '';
+            const baseApiUrl = '/B552584/MsrstnInfoInqireSvc/getNearbyMsrstnList';
+            return `${baseApiUrl}?serviceKey=${encodeURIComponent(DUST_KEY)}&returnType=json&${queryString}`;
+          }
+        },
+        '/api/sido-dust': {
+          target: 'https://apis.data.go.kr',
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => {
+            const queryString = path.split('?')[1] || '';
+            const baseApiUrl = '/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty';
+            return `${baseApiUrl}?serviceKey=${encodeURIComponent(DUST_KEY)}&returnType=json&${queryString}`;
+          }
+        },
+        '/api/dust': {
+          target: 'https://apis.data.go.kr',
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => {
             const queryString = path.split('?')[1] || '';
             const baseApiUrl = '/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty';
-            return `${baseApiUrl}?${queryString}`;
+            return `${baseApiUrl}?serviceKey=${encodeURIComponent(DUST_KEY)}&returnType=json&${queryString}`;
+          }
+        },
+        '/api/kakao-address': {
+          target: 'https://dapi.kakao.com',
+          changeOrigin: true,
+          secure: false,
+          headers: {
+            'Authorization': `KakaoAK ${KAKAO_KEY}`
+          },
+          rewrite: (path) => {
+            const queryString = path.split('?')[1] || '';
+            return `/v2/local/geo/coord2address.json?${queryString}`;
           }
         }
       }
