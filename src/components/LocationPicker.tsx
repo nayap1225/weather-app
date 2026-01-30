@@ -164,10 +164,15 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
         if (activeIndex >= 0) {
           handleSelectRegion(results[activeIndex]);
           onSearch(results[activeIndex].nx, results[activeIndex].ny);
+        } else if (results.length > 0) {
+          // 활성화된 항목이 없어도 결과가 있다면 첫 번째 항목 자동 선택
+          handleSelectRegion(results[0]);
+          onSearch(results[0].nx, results[0].ny);
         } else {
           setShowDropdown(false);
           onSearch();
         }
+        setShowDropdown(false);
         break;
       case 'Escape':
         setShowDropdown(false);
@@ -301,7 +306,15 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
 
         <button
           onClick={() => {
-            onSearch();
+            // [UX 개선] 사용자가 인풋에 입력하고 바로 조회를 누른 경우,
+            // 검색 결과의 첫 번째 항목이 있다면 해당 위치명으로 업데이트
+            if (results.length > 0) {
+              const bestMatch = results[0];
+              handleSelectRegion(bestMatch);
+              onSearch(bestMatch.nx, bestMatch.ny);
+            } else {
+              onSearch();
+            }
             setShowDropdown(false);
           }}
           disabled={loading || gpsLoading}
