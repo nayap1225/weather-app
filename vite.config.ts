@@ -117,7 +117,8 @@ export default defineConfig(({ mode }) => {
           rewrite: (path) => {
             const queryString = path.split('?')[1] || '';
             const baseApiUrl = '/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty';
-            return `${baseApiUrl}?serviceKey=${encodeURIComponent(DUST_KEY)}&returnType=json&numOfRows=200&${queryString}`;
+            // 경기도 전체(약 120개 이상) 및 대도시 데이터 누락 방지를 위해 1000으로 상향
+            return `${baseApiUrl}?serviceKey=${encodeURIComponent(DUST_KEY)}&returnType=json&numOfRows=1000&${queryString}`;
           }
         },
         '/api/dust': {

@@ -210,7 +210,7 @@ function App() {
 
         {weatherData && (
           <>
-            <WeatherNowCard data={weatherData} />
+            <WeatherNowCard data={weatherData} dustData={dustData} />
 
             <DustCard dust={dustData} loading={dustLoading} />
 

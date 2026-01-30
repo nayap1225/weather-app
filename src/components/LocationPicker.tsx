@@ -57,43 +57,35 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
     const matched = findAllRegionsByNxNy(nx, ny);
 
     if (matched.length === 0) {
-      if (nx === 60 && ny === 127) setSelectedRegionName("서울특별시 종로구 (기본)");
+      if (nx === 60 && ny === 127) setSelectedRegionName("서울특별시 종로구 사직동");
       else setSelectedRegionName(`위치 좌표: ${nx}, ${ny}`);
       return;
     }
 
     // 2. 만약 selectedRegionName이 이미 matched 목록 중 하나라면(사용자가 방금 선택함) 굳이 덮어쓰지 않음.
     // (단, 단순 문자열 비교라 정확하진 않지만 UX 개선용)
-    const currentName = selectedRegionName.replace(' (기본)', '').replace(' 인근 (GPS)', '').trim();
+    const currentName = selectedRegionName.replace(' (기본)', '').replace(' (GPS)', '').trim();
     const isAlreadySet = matched.some(r => r.name === currentName || (r.s2 && currentName.includes(r.s2) && currentName.includes(r.s3)));
 
     if (isAlreadySet && selectedRegionName) return;
 
     // 3. 자동으로 대표 주소 설정
-    // 구(s2)가 같으면 '~~구 ~~동 외', 다르면 '~~구, ~~구'
-    const s2Set = new Set(matched.map(r => r.s2).filter(Boolean));
-    const s2List = Array.from(s2Set);
+    const s2List = Array.from(new Set(matched.map(r => r.s2).filter(Boolean)));
+    const s3List = Array.from(new Set(matched.map(r => r.s3).filter(Boolean)));
 
     if (s2List.length === 1) {
-      // 같은 구
-      const s3Set = new Set(matched.map(r => r.s3).filter(Boolean));
-      const s3List = Array.from(s3Set);
       const district = s2List[0];
-
       if (s3List.length > 0) {
-        // 그냥 첫번째 동을 대표로 표시하거나 '~~동 외' 처리
-        const dong = s3List[0];
-        // 너무 길어지지 않게
-        const suffix = s3List.length > 1 ? ' 등' : '';
-        setSelectedRegionName(`${district} ${dong}${suffix}`);
+        // [UX 개선] '인근', '등' 제거하고 구체적인 첫 번째 동 표시
+        setSelectedRegionName(`${district} ${s3List[0]}`);
       } else {
         setSelectedRegionName(district || matched[0].name);
       }
     } else if (s2List.length > 1) {
-      // 여러 구에 걸친 좌표
-      setSelectedRegionName(`${s2List.join(', ')} 인근`);
+      // 여러 구에 걸친 경우 첫 번째 구/동을 우선 표시
+      const first = matched[0];
+      setSelectedRegionName(`${first.s2} ${first.s3}`.trim() || first.name);
     } else {
-      // 시/도 단위 등 예외
       setSelectedRegionName(matched[0].name);
     }
   }, [nx, ny]); // selectedRegionName은 의존성에서 제외 (무한루프 방지)
@@ -204,18 +196,15 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
           // [폴백] 카카오 API 실패 또는 키 미입력 시 기존 regions.json 기반 역추적
           const matchedRegions = findAllRegionsByNxNy(nx, ny);
           if (matchedRegions.length > 0) {
-            const s2Set = new Set(matchedRegions.map(r => r.s2).filter(Boolean));
-            const s2List = Array.from(s2Set);
-            if (s2List.length > 1) {
-              const label = s2List.slice(0, 2).join(', ');
-              setSelectedRegionName(`${label} 인근 (GPS)`);
+            const s2List = Array.from(new Set(matchedRegions.map(r => r.s2).filter(Boolean)));
+            const s3List = Array.from(new Set(matchedRegions.map(r => r.s3).filter(Boolean)));
+
+            if (s2List.length > 0) {
+              const district = s2List[0];
+              const dong = s3List[0] || '';
+              setSelectedRegionName(`${district} ${dong} (GPS)`.trim());
             } else {
-              const s3Set = new Set(matchedRegions.map(r => r.s3).filter(Boolean));
-              const s3List = Array.from(s3Set);
-              const displayS3 = s3List.slice(0, 2).join(', ');
-              const suffix = s3List.length > 2 ? ' 외' : '';
-              const district = s2List[0] || '';
-              setSelectedRegionName(`${district} ${displayS3}${suffix} 인근 (GPS)`);
+              setSelectedRegionName(matchedRegions[0].name + " (GPS)");
             }
           } else {
             setSelectedRegionName(`현재 위치 (GPS)`);

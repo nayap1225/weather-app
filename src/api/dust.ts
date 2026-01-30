@@ -11,6 +11,31 @@ export interface DustItem {
 }
 
 /**
+ * 시도 명칭을 AirKorea API 약어 규격(2글자)으로 변환합니다.
+ */
+const getSidoShort = (name: string) => {
+  if (!name) return "";
+  if (name.includes('서울')) return '서울';
+  if (name.includes('부산')) return '부산';
+  if (name.includes('대구')) return '대구';
+  if (name.includes('인천')) return '인천';
+  if (name.includes('광주')) return '광주';
+  if (name.includes('대전')) return '대전';
+  if (name.includes('울산')) return '울산';
+  if (name.includes('경기')) return '경기';
+  if (name.includes('강원')) return '강원';
+  if (name.includes('충북') || (name.includes('충청') && name.includes('북'))) return '충북';
+  if (name.includes('충남') || (name.includes('충청') && name.includes('남'))) return '충남';
+  if (name.includes('전북') || (name.includes('전라') && name.includes('북'))) return '전북';
+  if (name.includes('전남') || (name.includes('전라') && name.includes('남'))) return '전남';
+  if (name.includes('경북') || (name.includes('경상') && name.includes('북'))) return '경북';
+  if (name.includes('경남') || (name.includes('경상') && name.includes('남'))) return '경남';
+  if (name.includes('제주')) return '제주';
+  if (name.includes('세종')) return '세종';
+  return name.slice(0, 2);
+};
+
+/**
  * 측정소 이름으로 미세먼지 정보를 조회합니다.
  */
 export const getDustInfo = async (stationName: string): Promise<DustItem | null> => {
@@ -94,11 +119,11 @@ export const getNearbyStationWithDust = async (umdName: string, sidoName: string
       }
     };
     const findMatchedTM = (items: any[]) => {
-      const sShort = sidoName.slice(0, 2);
+      const sShort = getSidoShort(sidoName);
       const sClean = sggName.replace(/\s+/g, '');
       return items.find((item: any) => {
         if (!item.sidoName || !item.sggName) return false;
-        const itemSidoShort = item.sidoName.slice(0, 2);
+        const itemSidoShort = getSidoShort(item.sidoName);
         const itemSggClean = item.sggName.replace(/\s+/g, '');
         const isSidoMatch = (sShort === itemSidoShort);
         const isSggMatch = (sClean.includes(itemSggClean) || itemSggClean.includes(sClean.replace(/시|구|군/g, '')) || sClean.startsWith(itemSggClean.slice(0, 2)));
@@ -182,12 +207,13 @@ export const getNearbyStationWithDust = async (umdName: string, sidoName: string
 export const getDustInfoBySgg = async (sidoName: string, sggName: string, neighborhoodNames: string[]): Promise<DustItem | null> => {
   console.log(`[DustAPI] getDustInfoBySgg called for ${sidoName} ${sggName}`);
 
-  const sidoShort = sidoName.slice(0, 2);
+  const sidoShort = getSidoShort(sidoName);
   const sggClean = sggName.replace(/\s+/g, '');
   const encodedSido = encodeURIComponent(sidoShort);
 
   // ver=1.3: PM10, PM2.5 1시간 등급 정보 포함
-  const url = `/api/sido-dust?sidoName=${encodedSido}&searchCondition=HOUR&ver=1.3`;
+  // numOfRows=1000: 경기도와 같이 대규모 측정소가 있는 지역 대응 (프록시에서도 보강하지만 여기서도 명시)
+  const url = `/api/sido-dust?sidoName=${encodedSido}&searchCondition=HOUR&ver=1.3&numOfRows=1000`;
 
   try {
     const res = await fetch(url);
@@ -204,6 +230,16 @@ export const getDustInfoBySgg = async (sidoName: string, sggName: string, neighb
       '안산시상록구': ['본오동', '부곡동1', '부곡3동'],
       '안산시단원구': ['고잔동', '원시동', '호수동', '대부동', '중앙대로'],
       '안산시': ['고잔동', '본오동', '부곡동1', '원시동'],
+      '창원시': ['의창동', '용지동', '웅남동', '반송동', '사파동', '회원동', '봉암동', '월영동', '경화동', '웅동'],
+      '창원시성산구': ['웅남동', '반송동', '사파동', '토월동', '중앙동'],
+      '창원시진해구': ['경화동', '진해항', '웅동'],
+      '창원시마산회원구': ['회원동', '봉암동', '내서읍'],
+      '창원시마산합포구': ['월영동', '진동면'],
+      '창원시의창구': ['의창동', '용지동', '대산면'],
+      '고양시': ['신원동', '행신동', '식사동', '주엽동'],
+      '고양시덕양구': ['신원동', '행신동', '관산동'],
+      '고양시일산동구': ['식사동', '중산동', '마두역'],
+      '고양시일산서구': ['주엽동', '일산동'],
       '세종특별자치시': ['세종', '조치원', '아름동', '신흥동'],
       '세종시': ['세종', '조치원', '아름동', '신흥동'],
       '제주시': ['이도동', '연동', '노형동'],
@@ -216,11 +252,29 @@ export const getDustInfoBySgg = async (sidoName: string, sggName: string, neighb
     // 유효한 데이터가 있는 측정소를 우선적으로 찾습니다.
     const potentialItems = items.filter(item => {
       const stationName = item.stationName;
-      const isSggMatch = (sggClean.includes(stationName) || (stationName.length > 1 && sggClean.includes(stationName.replace(/시|구|군/g, ''))));
-      const isManualMatch = targetManualStations.some(s => stationName.includes(s));
-      const isNeighborhoodMatch = neighborhoodNames.includes(stationName);
 
-      return isSggMatch || isManualMatch || isNeighborhoodMatch;
+      // 1. 수동 매핑 확인
+      const isManualMatch = targetManualStations.some(s => stationName.includes(s));
+      if (isManualMatch) return true;
+
+      // 2. 행정동 리스트와 매칭 (측정소 이름이 동 이름이거나 동 이름을 포함할 때)
+      const isNeighborhoodMatch = neighborhoodNames.some(dong => stationName.includes(dong) || dong.includes(stationName));
+      if (isNeighborhoodMatch) return true;
+
+      // 3. 시군구 명칭 유연 매칭
+      // "창원시진해구" -> ["창원시", "진해구", "창원", "진해"]
+      const sggParts = [sggClean];
+      const complexMatch = sggClean.match(/^([가-힣]+시)([가-힣]+[구군])$/);
+      if (complexMatch) {
+        sggParts.push(complexMatch[1], complexMatch[2]);
+        sggParts.push(complexMatch[1].replace(/시$/, ''), complexMatch[2].replace(/[구군]$/, ''));
+      } else {
+        sggParts.push(sggClean.replace(/시|구|군/g, ''));
+      }
+
+      const isSggMatch = sggParts.some(part => part.length > 1 && (stationName.includes(part) || part.includes(stationName)));
+
+      return isSggMatch;
     });
 
     // 유효한 데이터(pm10Value가 -가 아님)가 있는 첫 번째 항목 선택
@@ -228,7 +282,7 @@ export const getDustInfoBySgg = async (sidoName: string, sggName: string, neighb
       || potentialItems[0]; // 없으면 첫 번째라도 반환
 
     if (finalItem) {
-      console.log(`[DustAPI] Found valid station: ${finalItem.stationName} for ${sggClean}`);
+      console.log(`[DustAPI] Found valid station: ${finalItem.stationName} for ${sggClean} (${neighborhoodNames[0]})`);
       return finalItem as DustItem;
     }
 

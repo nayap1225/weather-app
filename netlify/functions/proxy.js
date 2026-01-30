@@ -70,7 +70,7 @@ exports.handler = async (event, context) => {
     if (!params.has('dataType')) params.set('dataType', 'JSON');
   } else if (path.includes('/api/dust') || path.includes('/api/sido-dust') || path.includes('/api/tm-coord') || path.includes('/api/nearby-station')) {
     if (!params.has('numOfRows')) {
-      params.set('numOfRows', path.includes('sido-dust') ? '200' : '10');
+      params.set('numOfRows', path.includes('sido-dust') ? '1000' : '10');
     }
     if (!params.has('returnType')) params.set('returnType', 'json');
   }
