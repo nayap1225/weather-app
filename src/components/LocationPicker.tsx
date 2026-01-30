@@ -49,6 +49,10 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
 
   // 좌표(nx, ny)가 변경되면 해당 위치의 주소명을 찾아서 업데이트
   useEffect(() => {
+    // [버그 수정] GPS 로딩 중일 때는 카카오 API 등 더 정확한 주소를 가져오는 중이므로
+    // 단순 좌표 매칭(regions.json)으로 덮어쓰지 않도록 방지 (플리커링 해결)
+    if (gpsLoading) return;
+
     // 1. 이미 선택된 이름이 있고, 그 이름이 현재 좌표와 일치하는지 검증은 복잡하므로 생략.
     // 하지만 사용자가 검색해서 클릭했을 때는 setSelectedRegionName이 먼저 실행됨.
     // 따라서 여기서는 '초기 로딩' 이거나 '외부에서 좌표가 변했을 때(GPS 등)'를 커버해야 함.
@@ -174,6 +178,8 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
   };
 
   const handleCurrentLocation = () => {
+    setKeyword(''); // [UX 수정] 현재 위치 버튼 클릭 시 검색어 입력창 초기화
+
     if (!navigator.geolocation) {
       alert("브라우저가 위치 정보를 지원하지 않습니다.");
       return;
