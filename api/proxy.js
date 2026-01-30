@@ -64,7 +64,11 @@ export default async function handler(req, res) {
     if (!params.has('numOfRows')) params.set('numOfRows', '10');
     if (!params.has('dataType')) params.set('dataType', 'JSON');
   } else if (pathname.includes('/api/dust') || pathname.includes('/api/sido-dust') || pathname.includes('/api/tm-coord') || pathname.includes('/api/nearby-station')) {
-    if (!params.has('numOfRows')) params.set('numOfRows', '10'); // 측정소는 여러개 올 수 있게 10개로 설정
+    if (!params.has('numOfRows')) {
+      // sido-dust는 경기도 전체(약 120개 이상)를 가져와야 하므로 200으로 설정
+      const rows = pathname.includes('sido-dust') ? '200' : '10';
+      params.set('numOfRows', rows);
+    }
     if (!params.has('returnType')) params.set('returnType', 'json');
   }
 
