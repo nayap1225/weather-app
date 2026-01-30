@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { searchRegions, findAllRegionsByNxNy } from '../utils/regionUtils';
 import { dfs_xy_conv } from '../utils/coordinateConverter';
+import { getAddressFromCoords } from '../api/kakao';
 import type { Region } from '../types/region';
 
 interface Props {
@@ -179,41 +180,40 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
 
     setGpsLoading(true);
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         const { latitude, longitude } = position.coords;
         const { nx, ny } = dfs_xy_conv(latitude, longitude);
 
         onLocationChange(nx, ny);
 
-        // 좌표로 지역명 역추적 (다건 조회)
-        const matchedRegions = findAllRegionsByNxNy(nx, ny);
+        // [신규] 카카오 API를 통한 정확한 행정구역 주소 획득
+        const kakaoAddr = await getAddressFromCoords(latitude, longitude);
 
-        if (matchedRegions.length > 0) {
-          // 1. 구(s2) 단위로 그룹핑
-          const s2Set = new Set(matchedRegions.map(r => r.s2).filter(Boolean));
-          const s2List = Array.from(s2Set);
-
-          if (s2List.length > 1) {
-            // 다른 구가 섞여있는 경우 (예: 금천구, 양천구) -> 구 단위로 표시
-            const label = s2List.slice(0, 2).join(', '); // 최대 2개만 표시
-            setSelectedRegionName(`${label} 인근 (GPS)`);
-          } else {
-            // 같은 구인 경우 (예: 금천구) -> 동(s3) 단위로 표시
-            const s3Set = new Set(matchedRegions.map(r => r.s3).filter(Boolean));
-            const s3List = Array.from(s3Set);
-            // 최대 2개 동만 표시하고 "등" 붙임
-            const displayS3 = s3List.slice(0, 2).join(', ');
-            const suffix = s3List.length > 2 ? ' 외' : '';
-            const district = s2List[0] || '';
-
-            setSelectedRegionName(`${district} ${displayS3}${suffix} 인근 (GPS)`);
-          }
+        if (kakaoAddr) {
+          setSelectedRegionName(`${kakaoAddr} (현재 위치)`);
         } else {
-          setSelectedRegionName(`현재 위치 (GPS)`);
+          // [폴백] 카카오 API 실패 또는 키 미입력 시 기존 regions.json 기반 역추적
+          const matchedRegions = findAllRegionsByNxNy(nx, ny);
+          if (matchedRegions.length > 0) {
+            const s2Set = new Set(matchedRegions.map(r => r.s2).filter(Boolean));
+            const s2List = Array.from(s2Set);
+            if (s2List.length > 1) {
+              const label = s2List.slice(0, 2).join(', ');
+              setSelectedRegionName(`${label} 인근 (GPS)`);
+            } else {
+              const s3Set = new Set(matchedRegions.map(r => r.s3).filter(Boolean));
+              const s3List = Array.from(s3Set);
+              const displayS3 = s3List.slice(0, 2).join(', ');
+              const suffix = s3List.length > 2 ? ' 외' : '';
+              const district = s2List[0] || '';
+              setSelectedRegionName(`${district} ${displayS3}${suffix} 인근 (GPS)`);
+            }
+          } else {
+            setSelectedRegionName(`현재 위치 (GPS)`);
+          }
         }
 
         onSearch(nx, ny);
-
         setGpsLoading(false);
       },
       (error) => {

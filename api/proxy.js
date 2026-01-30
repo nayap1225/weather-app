@@ -6,23 +6,26 @@ export default async function handler(req, res) {
   // API Key 가져오기
   const WEATHER_KEY = process.env.VITE_WEATHER_API_KEY;
   const DUST_KEY = process.env.VITE_DUST_API_KEY;
+  const KAKAO_KEY = process.env.VITE_KAKAO_API_KEY;
 
   if (!WEATHER_KEY || !DUST_KEY) {
     return res.status(500).json({ error: 'Missing API Keys in Environment Variables' });
   }
 
-  // 인코딩된 키가 필요할 수 있으므로 상황에 따라 decode/encode 처리
-  // 공공데이터포털은 보통 Decoding된 키를 쿼리에 넣으면 알아서 처리되거나, Encoding된 키를 넣어야 함.
-  // 여기서는 '서비스키' 자체를 그대로 전달하는 방식을 시도.
-
   let targetBaseUrl = '';
   let serviceKey = '';
+  let headers = {};
+  let isKakao = false;
 
   // 경로에 따른 타겟 URL 설정
-  if (pathname.includes('/api/weather')) { // 초단기실황
+  if (pathname.includes('/api/weather')) {
     targetBaseUrl = 'https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst';
     serviceKey = WEATHER_KEY;
-  } else if (pathname.includes('/api/forecast')) { // 단기예보
+  } else if (pathname.includes('/api/kakao-address')) {
+    targetBaseUrl = 'https://dapi.kakao.com/v2/local/geo/coord2address.json';
+    isKakao = true;
+    headers = { 'Authorization': `KakaoAK ${KAKAO_KEY}` };
+  } else if (pathname.includes('/api/forecast')) {
     targetBaseUrl = 'https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst';
     serviceKey = WEATHER_KEY;
   } else if (pathname.includes('/api/mid-land')) { // 중기육상
@@ -66,12 +69,14 @@ export default async function handler(req, res) {
   }
 
   // URL 조립 (serviceKey는 인코딩 이슈 방지를 위해 encodeURIComponent 적용)
-  const finalUrl = `${targetBaseUrl}?serviceKey=${encodeURIComponent(serviceKey)}&${params.toString()}`;
+  const finalUrl = isKakao
+    ? `${targetBaseUrl}?${params.toString()}`
+    : `${targetBaseUrl}?serviceKey=${encodeURIComponent(serviceKey)}&${params.toString()}`;
 
-  console.log(`[Proxy] Forwarding to: ${targetBaseUrl}`);
+  console.log(`[Proxy] Forwarding to: ${isKakao ? 'KakaoAPI' : targetBaseUrl}`);
 
   try {
-    const apiRes = await fetch(finalUrl);
+    const apiRes = await fetch(finalUrl, { headers });
     const contentType = apiRes.headers.get('content-type');
 
     if (contentType && contentType.includes('application/json')) {
