@@ -212,24 +212,24 @@ export const getDustInfoBySgg = async (sidoName: string, sggName: string, neighb
 
     const targetManualStations = manualMapping[sggClean] || [];
 
-    const matchedItem = items.find(item => {
+    // [개선] 지명이 매칭되더라도 실제 데이터가 없는(-) 측정소는 건너뛰고 
+    // 유효한 데이터가 있는 측정소를 우선적으로 찾습니다.
+    const potentialItems = items.filter(item => {
       const stationName = item.stationName;
-
-      // 1. 수동 매핑 확인 (안산 등)
-      if (targetManualStations.some(s => stationName.includes(s))) return true;
-
-      // 2. 시군구 명칭 직접 매칭 (기존 로직)
       const isSggMatch = (sggClean.includes(stationName) || (stationName.length > 1 && sggClean.includes(stationName.replace(/시|구|군/g, ''))));
-
-      // 3. 행정동 리스트와 매칭
+      const isManualMatch = targetManualStations.some(s => stationName.includes(s));
       const isNeighborhoodMatch = neighborhoodNames.includes(stationName);
 
-      return isSggMatch || isNeighborhoodMatch;
+      return isSggMatch || isManualMatch || isNeighborhoodMatch;
     });
 
-    if (matchedItem) {
-      console.log(`[DustAPI] Found matching station in Sido-wide list: ${matchedItem.stationName}`);
-      return matchedItem as DustItem;
+    // 유효한 데이터(pm10Value가 -가 아님)가 있는 첫 번째 항목 선택
+    const finalItem = potentialItems.find(item => item.pm10Value && item.pm10Value !== '-' && item.pm10Value !== '')
+      || potentialItems[0]; // 없으면 첫 번째라도 반환
+
+    if (finalItem) {
+      console.log(`[DustAPI] Found valid station: ${finalItem.stationName} for ${sggClean}`);
+      return finalItem as DustItem;
     }
 
     return null;
