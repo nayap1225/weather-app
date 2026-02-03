@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>날씨 앱 종합 배경 시뮬레이터 (Pro)</title>
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <style>
+      @font-face {
+        font-family: "Binggrae";
+        src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/Binggrae.woff")
+          format("woff");
+      }
+      body {
+        font-family: "Binggrae", sans-serif;
+        overflow-x: hidden;
+      }
+
+      /* Animations */
+      @keyframes snow {
+        0% {
+          transform: translateY(-10px) translateX(0);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(100vh) translateX(20px);
+          opacity: 0.3;
+        }
+      }
+      @keyframes rain-drop {
+        0% {
+          transform: translateY(-20px);
+          opacity: 0;
+        }
+        10% {
+          opacity: 0.6;
+        }
+        90% {
+          opacity: 0.4;
+        }
+        100% {
+          transform: translateY(110vh);
+          opacity: 0;
+        }
+      }
+      @keyframes thunder-flash {
+        0%,
+        100% {
+          opacity: 0;
+        }
+        10%,
+        90% {
+          opacity: 0.3;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-20px);
+        }
+      }
+
+      .snow-particle {
+        position: absolute;
+        background: white;
+        border-radius: 50%;
+        pointer-events: none;
+        animation: snow infinite linear;
+      }
+      .rain-drop {
+        position: absolute;
+        background: #e0f2fe;
+        border-radius: 999px;
+        pointer-events: none;
+        animation: rain-drop infinite linear;
+      }
+      .thunder-layer {
+        position: absolute;
+        inset: 0;
+        background: white;
+        pointer-events: none;
+        z-index: 20;
+        animation: thunder-flash 0.2s ease-out;
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50 min-h-screen p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+      <header class="text-center mb-12">
+        <h1 class="text-4xl font-black text-slate-800 mb-4">
+          🌪️ 환경 엔진 시뮬레이터 (Pro)
+        </h1>
+        <p class="text-slate-500">
+          바람의 방향, 세기, 번개 효과까지 결합된 최첨단 날씨 엔진을 확인하세요.
+        </p>
+      </header>
+
+      <section
+        class="bg-white rounded-[2rem] shadow-2xl p-8 mb-16 border border-slate-200"
+      >
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-10">
+          <!-- Controls -->
+          <div class="xl:col-span-4 space-y-6">
+            <!-- Basic Controls -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label
+                  class="block text-xs font-bold text-slate-500 mb-2 uppercase"
+                  >🕒 시간대</label
+                >
+                <select
+                  id="timeSelect"
+                  class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg outline-none text-sm"
+                >
+                  <option value="night">밤</option>
+                  <option value="dawn">새벽</option>
+                  <option value="morning">아침</option>
+                  <option value="noon" selected>정오</option>
+                  <option value="afternoon">오후</option>
+                  <option value="sunset">노을</option>
+                </select>
+              </div>
+              <div>
+                <label
+                  class="block text-xs font-bold text-slate-500 mb-2 uppercase"
+                  >☁️ 날씨</label
+                >
+                <select
+                  id="weatherSelect"
+                  class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg outline-none text-sm"
+                >
+                  <option value="clear">맑음</option>
+                  <option value="clouds">구름</option>
+                  <option value="rain">비</option>
+                  <option value="snow">눈</option>
+                  <option value="fog">안개</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Wind Controls -->
+            <div
+              class="p-4 bg-blue-50 rounded-2xl border border-blue-100 space-y-4"
+            >
+              <h3
+                class="text-sm font-bold text-blue-800 flex items-center gap-2"
+              >
+                <span>🌪️</span> 바람 설정 (Wind)
+              </h3>
+              <div>
+                <div class="flex justify-between text-xs mb-2">
+                  <span class="text-blue-700">풍속 (WSD)</span>
+                  <span id="wsdVal" class="font-bold text-blue-900">0 m/s</span>
+                </div>
+                <input
+                  type="range"
+                  id="wsdRange"
+                  min="0"
+                  max="20"
+                  step="0.5"
+                  value="0"
+                  class="w-full h-1.5 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+              </div>
+              <div>
+                <div class="flex justify-between text-xs mb-2">
+                  <span class="text-blue-700">풍향 (VEC)</span>
+                  <span id="vecVal" class="font-bold text-blue-900"
+                    >북풍 (180°)</span
+                  >
+                </div>
+                <input
+                  type="range"
+                  id="vecRange"
+                  min="0"
+                  max="360"
+                  step="10"
+                  value="180"
+                  class="w-full h-1.5 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+              </div>
+            </div>
+
+            <!-- Intensity & Thunder -->
+            <div
+              class="p-4 bg-purple-50 rounded-2xl border border-purple-100 space-y-4"
+            >
+              <h3
+                class="text-sm font-bold text-purple-800 flex items-center gap-2"
+              >
+                <span>⚡</span> 특수 효과 (Intensity & Thunder)
+              </h3>
+              <div>
+                <div class="flex justify-between text-xs mb-2">
+                  <span class="text-purple-700">강수 강도 (RN1)</span>
+                  <span id="rn1Val" class="font-bold text-purple-900"
+                    >0 mm</span
+                  >
+                </div>
+                <input
+                  type="range"
+                  id="rn1Range"
+                  min="0"
+                  max="50"
+                  step="1"
+                  value="0"
+                  class="w-full h-1.5 bg-purple-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                />
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-purple-700"
+                  >천둥번개 활성화</span
+                >
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    id="thunderToggle"
+                    class="sr-only peer"
+                  />
+                  <div
+                    class="w-11 h-6 bg-purple-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"
+                  ></div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Dust -->
+            <div>
+              <label
+                class="block text-xs font-bold text-slate-500 mb-2 uppercase"
+                >😷 미세먼지</label
+              >
+              <input
+                type="range"
+                id="dustRange"
+                min="1"
+                max="4"
+                value="1"
+                class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-600"
+              />
+            </div>
+
+            <!-- Text Color Controller -->
+            <div class="pt-4 border-t border-slate-100">
+              <label
+                class="block text-xs font-bold text-slate-500 mb-2 uppercase"
+                >🔠 텍스트 컬러 (강제 설정)</label
+              >
+              <div class="flex gap-2">
+                <button
+                  onclick="setTextColor('auto')"
+                  class="text-btn flex-1 p-2 text-xs rounded-lg border border-blue-600 bg-blue-600 text-white"
+                  data-color="auto"
+                >
+                  자동 (Auto)
+                </button>
+                <button
+                  onclick="setTextColor('white')"
+                  class="text-btn flex-1 p-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700"
+                  data-color="white"
+                >
+                  화이트
+                </button>
+                <button
+                  onclick="setTextColor('dark')"
+                  class="text-btn flex-1 p-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700"
+                  data-color="dark"
+                >
+                  다크
+                </button>
+              </div>
+              <div class="mt-2 flex items-center gap-2">
+                <input
+                  type="color"
+                  id="customColor"
+                  oninput="setTextColor('custom')"
+                  class="w-8 h-8 rounded border border-slate-200 cursor-pointer"
+                />
+                <input
+                  type="text"
+                  id="customHex"
+                  placeholder="#FFFFFF"
+                  oninput="handleHexInput(this.value)"
+                  class="flex-1 p-2 text-xs rounded-lg border border-slate-200 bg-white outline-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Preview Area -->
+          <div class="xl:col-span-8">
+            <div
+              id="simPreview"
+              class="relative group aspect-[16/9] xl:h-[600px] rounded-[2rem] overflow-hidden shadow-2xl flex flex-col items-center justify-center transition-all duration-1000 bg-slate-900"
+            >
+              <div
+                id="simBase"
+                class="absolute inset-0 transition-all duration-1000"
+              ></div>
+              <div
+                id="simHaze"
+                class="absolute inset-0 pointer-events-none transition-all duration-1000"
+              ></div>
+              <div
+                id="simOverlay"
+                class="absolute inset-0 transition-all duration-1000"
+              ></div>
+              <div
+                id="simThunder"
+                class="absolute inset-0 pointer-events-none z-20"
+              ></div>
+              <div
+                id="simParticles"
+                class="absolute inset-0 pointer-events-none overflow-hidden"
+              ></div>
+
+              <!-- Mascot -->
+              <div
+                id="mascot"
+                class="relative z-10 w-32 h-32 animate-[float_4s_ease-in-out_infinite] transition-transform duration-500"
+              >
+                <img
+                  src="/gurumi_192x192.png"
+                  class="w-full h-full object-contain filter drop-shadow-2xl"
+                  alt="Mascot"
+                />
+              </div>
+
+              <!-- Requested Sample UI Box -->
+              <div
+                id="sampleBox"
+                class="flex flex-col flex-auto items-center w-full max-w-md mx-auto px-4 py-8 rounded-2xl backdrop-blur-sm bg-white/10 border border-white/20 z-10 mt-4 shadow-xl text-center"
+              >
+                <h2 class="text-4xl font-black mb-2">24.5°</h2>
+                <p class="text-lg font-bold opacity-80">
+                  가벼운 비가 내리고 있어요
+                </p>
+                <p class="text-sm mt-4 opacity-70">
+                  실제 앱에서 적용될 카드 형태의 미리보기입니다.<br />배경색에
+                  따른 시인성을 확인해 보세요.
+                </p>
+              </div>
+
+              <!-- Status Badge -->
+              <div
+                class="absolute top-6 left-6 bg-black/40 backdrop-blur-md px-4 py-2 rounded-xl text-white text-[10px] font-bold uppercase tracking-widest"
+              >
+                Live Environment Engine v3.0
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Technical Explanation -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
+        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <div class="text-2xl mb-3">🌬️</div>
+          <h4 class="font-bold text-slate-800 mb-2">Wind Physics</h4>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            풍속에 따라 입자의 속도가 동적으로 변하며, 풍향(VEC)에 맞춰 입자가
+            기울어지는 skewX 효과가 적용됩니다.
+          </p>
+        </div>
+        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <div class="text-2xl mb-3">⚡</div>
+          <h4 class="font-bold text-slate-800 mb-2">Thunder Logic</h4>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            번개 활성 시 불규칙한 간격으로 화면이 번쩍이는 플래시 레이어가
+            작동하여 폭우 상황의 긴장감을 더합니다.
+          </p>
+        </div>
+        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <div class="text-2xl mb-3">🌊</div>
+          <h4 class="font-bold text-slate-800 mb-2">Precipitation Scaling</h4>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            강수량(RN1) 데이터에 따라 화면에 뿌려지는 입자의 밀도를 최적화하여
+            보슬비부터 폭우까지 자연스럽게 표현합니다.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const themes = {
+        night: "bg-gradient-to-b from-slate-950 via-indigo-950 to-black",
+        dawn: "bg-gradient-to-b from-blue-300 via-pink-200 to-orange-100",
+        morning: "bg-gradient-to-b from-sky-300 via-blue-100 to-white",
+        noon: "bg-gradient-to-b from-sky-400 via-blue-200 to-sky-100",
+        afternoon: "bg-gradient-to-b from-sky-200 via-indigo-100 to-orange-50",
+        sunset: "bg-gradient-to-b from-orange-400 via-pink-400 to-indigo-900",
+      };
+
+      const weatherOverlays = {
+        clear: { color: "bg-transparent", opacity: 0 },
+        clouds: { color: "bg-slate-500", opacity: 0.3 },
+        rain: { color: "bg-blue-900", opacity: 0.4 },
+        snow: { color: "bg-white", opacity: 0.4 },
+        fog: { color: "bg-white", opacity: 0.3, haze: 0.5, blur: 8 },
+      };
+
+      let currentSettings = {
+        time: "noon",
+        weather: "clear",
+        dust: 1,
+        wsd: 0,
+        vec: 180,
+        rn1: 0,
+        thunder: false,
+        textColorOverride: "auto",
+      };
+
+      let thunderTimer;
+
+      function updateSimulator() {
+        const preview = document.getElementById("simPreview");
+        const base = document.getElementById("simBase");
+        const overlay = document.getElementById("simOverlay");
+        const haze = document.getElementById("simHaze");
+        const particles = document.getElementById("simParticles");
+        const mascot = document.getElementById("mascot");
+
+        // 1. Time Base
+        base.className =
+          "absolute inset-0 transition-all duration-1000 " +
+          themes[currentSettings.time];
+
+        // 2. Weather & Dust
+        let w = weatherOverlays[currentSettings.weather];
+        overlay.className =
+          "absolute inset-0 transition-all duration-1000 " + w.color;
+        overlay.style.opacity = w.opacity;
+
+        let hazeOpacity = w.haze || 0;
+        let filterString = w.blur ? `blur(${w.blur}px)` : "none";
+
+        if (currentSettings.dust >= 3) {
+          const intensity = currentSettings.dust === 4 ? 1 : 0.6;
+          hazeOpacity = Math.max(hazeOpacity, intensity * 0.45);
+          filterString =
+            (filterString !== "none" ? filterString + " " : "") +
+            `sepia(${intensity * 0.6}) contrast(0.9) blur(${intensity * 2}px)`;
+          if (currentSettings.dust >= 4) {
+            overlay.className =
+              "absolute inset-0 transition-all duration-1000 bg-yellow-900";
+            overlay.style.opacity = Math.max(w.opacity, 0.25);
+          }
+        }
+        haze.style.opacity = hazeOpacity;
+        haze.style.backdropFilter = filterString;
+        haze.style.webkitBackdropFilter = filterString;
+
+        // 3. Wind Physics
+        const rad = (currentSettings.vec * Math.PI) / 180;
+        const horizontalWind = -Math.sin(rad) * currentSettings.wsd;
+        const windTilt = Math.max(-30, Math.min(30, horizontalWind * 5));
+        mascot.style.transform = `translateX(${windTilt}px)`;
+
+        // 4. Particles
+        particles.innerHTML = "";
+        let countFactor = 1;
+        if (currentSettings.rn1 > 0) {
+          if (currentSettings.rn1 < 1) countFactor = 1.5;
+          else if (currentSettings.rn1 < 5) countFactor = 2.5;
+          else countFactor = 4;
+        }
+
+        if (currentSettings.weather === "rain") {
+          const count = Math.floor(25 * countFactor);
+          for (let i = 0; i < count; i++) {
+            const drop = document.createElement("div");
+            drop.className = "rain-drop";
+            drop.style.width = Math.random() * 1.5 + 1 + "px";
+            drop.style.height = Math.random() * 10 + 6 + "px";
+            drop.style.left = Math.random() * 130 - 15 + "%";
+            drop.style.top = "-" + Math.random() * 50 + "px";
+            drop.style.transform = `rotate(${windTilt}deg) skewX(${windTilt}deg)`;
+            drop.style.animationDuration =
+              (Math.random() * 0.5 + 1.2) / (1 + currentSettings.wsd * 0.2) +
+              "s";
+            drop.style.animationDelay = `-${Math.random() * 2}s`;
+            particles.appendChild(drop);
+          }
+        } else if (currentSettings.weather === "snow") {
+          const count = Math.floor(15 * countFactor);
+          for (let i = 0; i < count; i++) {
+            const snow = document.createElement("div");
+            snow.className = "snow-particle";
+            snow.style.width = Math.random() * 8 + 4 + "px";
+            snow.style.height = snow.style.width;
+            snow.style.left = Math.random() * 130 - 15 + "%";
+            snow.style.transform = `rotate(${windTilt}deg) skewX(${windTilt}deg)`;
+            snow.style.animationDuration =
+              Math.random() * 5 + 5 / (1 + currentSettings.wsd * 0.1) + "s";
+            snow.style.animationDelay = `-${Math.random() * 10}s`;
+            particles.appendChild(snow);
+          }
+        }
+
+        // 5. Thunder Logic
+        clearTimeout(thunderTimer);
+        if (currentSettings.thunder) {
+          const triggerThunder = () => {
+            const layer = document.createElement("div");
+            layer.className = "thunder-layer";
+            document.getElementById("simThunder").appendChild(layer);
+            setTimeout(() => layer.remove(), 300);
+            thunderTimer = setTimeout(
+              triggerThunder,
+              3000 + Math.random() * 7000,
+            );
+          };
+          thunderTimer = setTimeout(triggerThunder, 3000);
+        }
+
+        // Contrast
+        if (currentSettings.textColorOverride === "auto") {
+          const isDark =
+            ["night", "sunset"].includes(currentSettings.time) ||
+            currentSettings.weather === "rain";
+          preview.style.color = ""; // Clear explicit color
+          preview.classList.toggle("text-white", isDark);
+          preview.classList.toggle("text-slate-900", !isDark);
+        } else if (currentSettings.textColorOverride === "custom") {
+          preview.classList.remove("text-white", "text-slate-900");
+          preview.style.color = currentSettings.customColor;
+        } else {
+          const isWhite = currentSettings.textColorOverride === "white";
+          preview.style.color = ""; // Clear explicit color
+          preview.classList.toggle("text-white", isWhite);
+          preview.classList.toggle("text-slate-900", !isWhite);
+        }
+
+        // Labels
+        document.getElementById("wsdVal").textContent =
+          currentSettings.wsd + " m/s";
+        // VEC to Direction Name
+        const directions = [
+          "북",
+          "북동",
+          "동",
+          "남동",
+          "남",
+          "남서",
+          "서",
+          "북서",
+        ];
+        const idx = Math.floor(((currentSettings.vec + 22.5) % 360) / 45);
+        document.getElementById("vecVal").textContent =
+          directions[idx] + "풍 (" + currentSettings.vec + "°)";
+        document.getElementById("rn1Val").textContent =
+          currentSettings.rn1 + " mm";
+      }
+
+      function setTextColor(mode) {
+        currentSettings.textColorOverride = mode;
+        if (mode === "custom") {
+          currentSettings.customColor =
+            document.getElementById("customColor").value;
+          document.getElementById("customHex").value =
+            currentSettings.customColor.toUpperCase();
+        }
+        document.querySelectorAll(".text-btn").forEach((btn) => {
+          const isActive = btn.dataset.color === mode;
+          btn.className = `text-btn flex-1 p-2 text-xs rounded-lg border transition-all ${isActive ? "bg-blue-600 text-white border-blue-600 shadow-md" : "bg-white border-slate-200 text-slate-700"}`;
+        });
+        updateSimulator();
+      }
+
+      function handleHexInput(val) {
+        if (/^#[0-9A-F]{6}$/i.test(val)) {
+          document.getElementById("customColor").value = val;
+          setTextColor("custom");
+        }
+      }
+
+      // Listeners
+      document.getElementById("timeSelect").addEventListener("change", (e) => {
+        currentSettings.time = e.target.value;
+        updateSimulator();
+      });
+      document
+        .getElementById("weatherSelect")
+        .addEventListener("change", (e) => {
+          currentSettings.weather = e.target.value;
+          updateSimulator();
+        });
+      document.getElementById("wsdRange").addEventListener("input", (e) => {
+        currentSettings.wsd = parseFloat(e.target.value);
+        updateSimulator();
+      });
+      document.getElementById("vecRange").addEventListener("input", (e) => {
+        currentSettings.vec = parseInt(e.target.value);
+        updateSimulator();
+      });
+      document.getElementById("rn1Range").addEventListener("input", (e) => {
+        currentSettings.rn1 = parseFloat(e.target.value);
+        updateSimulator();
+      });
+      document.getElementById("dustRange").addEventListener("input", (e) => {
+        currentSettings.dust = parseInt(e.target.value);
+        updateSimulator();
+      });
+      document
+        .getElementById("thunderToggle")
+        .addEventListener("change", (e) => {
+          currentSettings.thunder = e.target.checked;
+          updateSimulator();
+        });
+
+      updateSimulator();
+    </script>
+  </body>
+</html>

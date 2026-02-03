@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>날씨 앱 시간대별 테마 미리보기</title>
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <style>
+      @font-face {
+        font-family: "Binggrae";
+        src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/Binggrae.woff")
+          format("woff");
+      }
+      body {
+        font-family: "Binggrae", sans-serif;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 p-8">
+    <h1 class="text-3xl font-bold text-center mb-10 text-gray-800">
+      🌦️ 시간대별 배경 테마 (6단계 분기)
+    </h1>
+
+    <div
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto"
+    >
+      <!-- 1. Dawn -->
+      <div
+        class="relative h-[500px] rounded-3xl overflow-hidden shadow-2xl flex flex-col items-center justify-center p-6 bg-gradient-to-b from-blue-300 via-pink-200 to-orange-100 text-slate-900 border border-white/20"
+      >
+        <div
+          class="absolute top-4 left-4 bg-black/20 text-white px-3 py-1 rounded-full text-xs"
+        >
+          Progress: 0.05
+        </div>
+        <h2 class="text-2xl font-bold mb-2">1. Dawn (새벽)</h2>
+        <p class="text-center opacity-80">
+          07:30 ~ 08:31<br />희망차고 몽글몽글한 새벽
+        </p>
+        <div
+          class="mt-auto bg-black/10 backdrop-blur-md p-4 rounded-2xl w-full text-center"
+        >
+          text-slate-900 (Dark)
+        </div>
+      </div>
+
+      <!-- 2. Morning -->
+      <div
+        class="relative h-[500px] rounded-3xl overflow-hidden shadow-2xl flex flex-col items-center justify-center p-6 bg-gradient-to-b from-sky-300 via-blue-100 to-white text-slate-900 border border-white/20"
+      >
+        <div
+          class="absolute top-4 left-4 bg-black/20 text-white px-3 py-1 rounded-full text-xs"
+        >
+          Progress: 0.25
+        </div>
+        <h2 class="text-2xl font-bold mb-2">2. Morning (아침)</h2>
+        <p class="text-center opacity-80">
+          08:31 ~ 11:36<br />상쾌하고 투명한 아침
+        </p>
+        <div
+          class="mt-auto bg-black/10 backdrop-blur-md p-4 rounded-2xl w-full text-center"
+        >
+          text-slate-900 (Dark)
+        </div>
+      </div>
+
+      <!-- 3. Noon -->
+      <div
+        class="relative h-[500px] rounded-3xl overflow-hidden shadow-2xl flex flex-col items-center justify-center p-6 bg-gradient-to-b from-sky-400 via-blue-200 to-sky-100 text-slate-900 border border-white/20"
+      >
+        <div
+          class="absolute top-4 left-4 bg-black/20 text-white px-3 py-1 rounded-full text-xs"
+        >
+          Progress: 0.50
+        </div>
+        <h2 class="text-2xl font-bold mb-2">3. Noon (정오)</h2>
+        <p class="text-center opacity-80">
+          11:36 ~ 13:39<br />쨍한 햇살이 내리쬐는 낮
+        </p>
+        <div
+          class="mt-auto bg-black/10 backdrop-blur-md p-4 rounded-2xl w-full text-center"
+        >
+          text-slate-900 (Dark)
+        </div>
+      </div>
+
+      <!-- 4. Afternoon -->
+      <div
+        class="relative h-[500px] rounded-3xl overflow-hidden shadow-2xl flex flex-col items-center justify-center p-6 bg-gradient-to-b from-sky-200 via-indigo-100 to-orange-50 text-slate-900 border border-white/20"
+      >
+        <div
+          class="absolute top-4 left-4 bg-black/20 text-white px-3 py-1 rounded-full text-xs"
+        >
+          Progress: 0.75
+        </div>
+        <h2 class="text-2xl font-bold mb-2">4. Afternoon (오후)</h2>
+        <p class="text-center opacity-80">
+          13:39 ~ 16:43<br />차분하게 기운이 빠지는 오후
+        </p>
+        <div
+          class="mt-auto bg-black/10 backdrop-blur-md p-4 rounded-2xl w-full text-center"
+        >
+          text-slate-900 (Dark)
+        </div>
+      </div>
+
+      <!-- 5. Sunset -->
+      <div
+        class="relative h-[500px] rounded-3xl overflow-hidden shadow-2xl flex flex-col items-center justify-center p-6 bg-gradient-to-b from-orange-400 via-pink-400 to-indigo-900 text-white border border-white/20"
+      >
+        <div
+          class="absolute top-4 left-4 bg-black/20 text-white px-3 py-1 rounded-full text-xs"
+        >
+          Progress: 0.95
+        </div>
+        <h2 class="text-2xl font-bold mb-2">5. Sunset (노을)</h2>
+        <p class="text-center opacity-80">
+          16:43 ~ 17:45<br />황홀하고 진한 감성 노을
+        </p>
+        <div
+          class="mt-auto bg-white/20 backdrop-blur-md p-4 rounded-2xl w-full text-center"
+        >
+          text-white (Light)
+        </div>
+      </div>
+
+      <!-- 6. Night -->
+      <div
+        class="relative h-[500px] rounded-3xl overflow-hidden shadow-2xl flex flex-col items-center justify-center p-6 bg-gradient-to-b from-slate-950 via-indigo-950 to-black text-white border border-white/20"
+      >
+        <div
+          class="absolute top-4 left-4 bg-black/20 text-white px-3 py-1 rounded-full text-xs"
+        >
+          Progress: Night
+        </div>
+        <h2 class="text-2xl font-bold mb-2">6. Night (밤)</h2>
+        <p class="text-center opacity-80">
+          17:45 ~ 07:30<br />깊고 고요한 한밤중
+        </p>
+        <div
+          class="mt-auto bg-white/10 backdrop-blur-md p-4 rounded-2xl w-full text-center"
+        >
+          text-white (Light)
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="mt-12 max-w-4xl mx-auto bg-white p-8 rounded-3xl shadow-lg border border-gray-200"
+    >
+      <h3 class="text-xl font-bold mb-4">💡 확인 포인트</h3>
+      <ul class="list-disc list-inside space-y-2 text-gray-700">
+        <li>
+          <strong>Solar Progress</strong>: 일출/일몰 사이를 0~1로 계산하여
+          그라데이션이 연속적으로 변합니다.
+        </li>
+        <li>
+          <strong>텍스트 컬러 (Auto Contrast)</strong>: 배경이 밝은 낮에는
+          <span class="font-bold text-slate-800">어두운 글씨</span>, 어두운
+          노을/밤에는 <span class="font-bold text-indigo-500">밝은 글씨</span>로
+          자동 전환됩니다.
+        </li>
+        <li>
+          <strong>날씨 오버레이</strong>: 실제 앱에서는 여기에 '흐림/비'
+          오버레이가 겹쳐져 더욱 현실적인 필터가 적용됩니다.
+        </li>
+      </ul>
+    </div>
+  </body>
+</html>

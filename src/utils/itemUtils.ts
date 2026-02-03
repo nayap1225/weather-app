@@ -7,7 +7,7 @@ export interface RecommendItem {
   icon: string; // Emoji
   reason: string;
   bgColor: string;
-  type: 'required' | 'optional'; // [NEW] 필수(required) vs 추천(optional) 구분
+  type: 'required' | 'optional';
 }
 
 export const getRecommendedItems = (
@@ -31,14 +31,13 @@ export const getRecommendedItems = (
   const rn1Item = weatherData.find(d => d.category === 'RN1');
   const rainAmount = rn1Item ? parseFloat(rn1Item.obsrValue || '0') : 0;
 
-  // [NEW] 예보 데이터 확인 (앞으로 12시간 이내 비/눈 예보 및 일교차)
+  // 예보 데이터 확인
   let rainInForecast = false;
   let snowInForecast = false;
   let maxTemp = -999;
   let minTemp = 999;
 
   if (forecastData) {
-    // PTY 예보 확인
     const ptyForecasts = forecastData
       .filter(item => item.category === 'PTY')
       .slice(0, 12);
@@ -53,13 +52,8 @@ export const getRecommendedItems = (
       return val === 3;
     });
 
-    // 일교차 계산을 위한 TMX, TMN 찾기 (오늘 날짜 기준)
-    // forecastData에는 여러 날짜가 있을 수 있으므로, 가장 먼저 나오는 TMX/TMN을 사용하거나
-    // 전체 데이터를 훑어서 최대/최소를 구함 (여기서는 단순화하여 전체 중 Max/Min)
-    // 단, TMX/TMN은 0200, 1100 등 특정 시간에만 나오므로 없을 수도 있음 -> T1H(3시간 기온)로 추정 가능
-    // 여기서는 간단히 T3H(단기예보 기온) 전체를 훑어서 차이를 계산
     const temps = forecastData
-      .filter(item => item.category === 'TMP' || item.category === 'T1H' || item.category === 'T3H') // API 버전에 따라 다름(VilageFcst는 TMP)
+      .filter(item => item.category === 'TMP' || item.category === 'T1H' || item.category === 'T3H')
       .map(item => Number(item.fcstValue));
 
     if (temps.length > 0) {
@@ -78,7 +72,7 @@ export const getRecommendedItems = (
 
   // 2. 조건 확인
 
-  // [필수] 우산: 현재 비가 오거나(pty), 예보에 비가 있거나(rainInForecast)
+  // [필수] 우산
   if (pty === 1 || pty === 2 || pty === 4 || rainInForecast) {
     items.push({
       id: 'umbrella',
@@ -90,7 +84,7 @@ export const getRecommendedItems = (
     });
   }
 
-  // [필수] 눈 관련 장비
+  // [필수] 눈 관련
   if (pty === 3 || snowInForecast) {
     items.push({
       id: 'snow_gear',
@@ -102,7 +96,7 @@ export const getRecommendedItems = (
     });
   }
 
-  // [필수] 마스크: 미세먼지 혹은 초미세먼지가 나쁨(3) 이상
+  // [필수] 마스크
   if (dustGrade >= 3 || fineDustGrade >= 3) {
     items.push({
       id: 'mask',
@@ -114,7 +108,7 @@ export const getRecommendedItems = (
     });
   }
 
-  // [추천] 레인부츠: 비가 오면서 시간당 5mm 이상
+  // [추천] 레인부츠
   if ((pty === 1 || pty === 2 || pty === 4) && rainAmount >= 5) {
     items.push({
       id: 'rain_boots',
@@ -126,7 +120,7 @@ export const getRecommendedItems = (
     });
   }
 
-  // [추천] 미스트/립밤: 습도 30% 미만
+  // [추천] 미스트/립밤
   if (humidity < 30) {
     items.push({
       id: 'mist',
@@ -138,7 +132,7 @@ export const getRecommendedItems = (
     });
   }
 
-  // [추천] 가디건/겉옷: 일교차 10도 이상
+  // [추천] 가디건
   if (maxTemp !== -999 && minTemp !== 999 && (maxTemp - minTemp >= 10)) {
     items.push({
       id: 'cardigan',
@@ -150,7 +144,7 @@ export const getRecommendedItems = (
     });
   }
 
-  // 날씨 기반 (기온/계절성)
+  // 날씨 기반
   if (temp >= 28) {
     items.push({
       id: 'hand_fan',
@@ -196,7 +190,7 @@ export const getRecommendedItems = (
     });
   }
 
-  // 기본값 (특별한 게 없으면 '준비물 없음' 대신 긍정 메시지 -> 추천템으로 취급)
+  // 기본값
   if (items.length === 0) {
     items.push({
       id: 'smile',

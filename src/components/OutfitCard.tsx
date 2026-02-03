@@ -1,4 +1,4 @@
-import { getOutfitByTemperature } from '../utils/outfitUtils';
+import { getOutfitByTemperature } from "../utils/outfitUtils";
 
 interface Props {
   temperature: number;
@@ -8,7 +8,9 @@ export default function OutfitCard({ temperature }: Props) {
   const outfit = getOutfitByTemperature(temperature);
 
   return (
-    <div className={`mt-6 p-6 rounded-2xl shadow-sm border ${outfit.color} transition-all hover:shadow-md`}>
+    <div
+      className={`mt-6 p-6 rounded-2xl shadow-sm border ${outfit.color} transition-all hover:shadow-md`}
+    >
       <div className="flex items-start gap-4">
         <div className="text-4xl bg-white p-3 rounded-full shadow-sm">
           {outfit.emoji}
@@ -28,9 +30,10 @@ export default function OutfitCard({ temperature }: Props) {
             {outfit.items.map((item, idx) => (
               <span
                 key={idx}
-                className="bg-white/70 px-3 py-1.5 rounded-lg text-sm font-semibold shadow-sm"
+                className="bg-white/70 px-3 py-1.5 rounded-lg text-sm font-semibold shadow-sm flex items-center gap-1.5"
               >
-                {item}
+                <span className="text-base">{item.icon}</span>
+                {item.name}
               </span>
             ))}
           </div>

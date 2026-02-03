@@ -1,5 +1,5 @@
-import { groupForecastItems, getWeatherIcon } from '../utils/weatherUtils';
-import type { WeatherItem } from '../api/weather';
+import { groupForecastItems, getWeatherIcon } from "../utils/weatherUtils";
+import type { WeatherItem } from "../api/weather";
 
 interface Props {
   data: WeatherItem[] | null;
@@ -27,9 +27,7 @@ export default function ForecastList({ data }: Props) {
 
   return (
     <div className="mt-8 w-full">
-      <h3 className="text-lg font-bold text-gray-800 mb-3 ml-1">
-        🕒 시간별 예보
-      </h3>
+      <h3 className="text-lg font-bold mb-3 ml-1">🕒 시간별 예보</h3>
 
       <div className="flex gap-4 overflow-x-auto pb-4 snap-x pr-4 scrollbar-hide">
         {displayList.map((item, idx) => (
@@ -47,7 +45,7 @@ export default function ForecastList({ data }: Props) {
               {item.temp}°
             </span>
             <span className="text-[10px] text-blue-500 mt-1 font-medium">
-              {Number(item.pop) > 0 ? `${item.pop}%` : ''}
+              {Number(item.pop) > 0 ? `${item.pop}%` : ""}
             </span>
           </div>
         ))}

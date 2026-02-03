@@ -1,14 +1,14 @@
-import { useState, useEffect, useRef } from 'react';
-import { searchRegions, findAllRegionsByNxNy } from '../utils/regionUtils';
-import { dfs_xy_conv } from '../utils/coordinateConverter';
-import { getAddressFromCoords } from '../api/kakao';
-import type { Region } from '../types/region';
+import { useState, useEffect, useRef } from "react";
+import { searchRegions, findAllRegionsByNxNy } from "../utils/regionUtils";
+import { dfs_xy_conv } from "../utils/coordinateConverter";
+import { getAddressFromCoords } from "../api/kakao";
+import type { Region } from "../types/region";
 
 interface Props {
   nx: number;
   ny: number;
-  onLocationChange: (nx: number, ny: number) => void;
-  onSearch: (nx?: number, ny?: number) => void;
+  onLocationChange: (nx: number, ny: number, region?: Region) => void;
+  onSearch: (nx?: number, ny?: number, region?: Region) => void;
   loading: boolean;
 }
 
@@ -22,20 +22,118 @@ interface Props {
 //    - 키보드 방향키(↑, ↓) 및 엔터(Enter)로 목록 선택 기능 추가
 //    - 단순 엔터 시 자동선택 방지 (사용자가 직접 선택하거나 클릭할 때만 확정)
 
-export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loading }: Props) {
-  const [keyword, setKeyword] = useState('');
+export default function LocationPicker({
+  nx,
+  ny,
+  onLocationChange,
+  onSearch,
+  loading,
+}: Props) {
+  const [keyword, setKeyword] = useState("");
   const [results, setResults] = useState<Region[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1); // [UX] 키보드 탐색을 위한 상태 추가
-  const [selectedRegionName, setSelectedRegionName] = useState('');
+  const [selectedRegionName, setSelectedRegionName] = useState("");
   const [gpsLoading, setGpsLoading] = useState(false); // [UX] 별도의 GPS 로딩 상태 관리 (버튼 UI 유지용)
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
+  async function handleCurrentLocation() {
+    setKeyword(""); // [UX 수정] 현재 위치 버튼 클릭 시 검색어 입력창 초기화
+
+    if (!navigator.geolocation) {
+      alert("브라우저가 위치 정보를 지원하지 않습니다.");
+      return;
+    }
+
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        const { nx, ny } = dfs_xy_conv(latitude, longitude);
+
+        // onLocationChange(nx, ny); // This will be called conditionally below
+
+        // [신규] 카카오 API를 통한 정확한 행정구역 주소 획득
+        const kakaoAddr = await getAddressFromCoords(latitude, longitude);
+
+        if (kakaoAddr) {
+          setSelectedRegionName(`${kakaoAddr} (현재 위치)`);
+
+          // [Fix] GPS로 주소를 찾았을 때, 정확한 행정구역 매칭을 위해 regions.json에서 찾아서 전달
+          // kakaoAddr (예: 서울 금천구 독산동) -> "독산동" 포함하는지 찾기
+          const matchedRegions = findAllRegionsByNxNy(nx, ny);
+          const matched = matchedRegions.find(
+            (r) => kakaoAddr.includes(r.s3) || kakaoAddr.includes(r.s2),
+          );
+          if (matched) {
+            onLocationChange(nx, ny, matched);
+            onSearch(nx, ny, matched);
+          } else {
+            onLocationChange(nx, ny);
+            onSearch(nx, ny);
+          }
+        } else {
+          // [폴백] 카카오 API 실패 또는 키 미입력 시 기존 regions.json 기반 역추적
+          const matchedRegions = findAllRegionsByNxNy(nx, ny);
+          if (matchedRegions.length > 0) {
+            const s2List = Array.from(
+              new Set(matchedRegions.map((r) => r.s2).filter(Boolean)),
+            );
+            const s3List = Array.from(
+              new Set(matchedRegions.map((r) => r.s3).filter(Boolean)),
+            );
+
+            if (s2List.length > 0) {
+              const district = s2List[0];
+              const dong = s3List[0] || "";
+              setSelectedRegionName(`${district} ${dong} (GPS)`.trim());
+              onLocationChange(nx, ny, matchedRegions[0]);
+              onSearch(nx, ny, matchedRegions[0]);
+            } else {
+              setSelectedRegionName(matchedRegions[0].name + " (GPS)");
+              onLocationChange(nx, ny, matchedRegions[0]);
+              onSearch(nx, ny, matchedRegions[0]);
+            }
+          } else {
+            setSelectedRegionName(`현재 위치 (GPS)`);
+            onLocationChange(nx, ny);
+            onSearch(nx, ny);
+          }
+        }
+
+        // onSearch(nx, ny); // Moved inside methods for explicit region passing
+        setGpsLoading(false);
+      },
+      (error) => {
+        console.error("[GPS] Error:", error);
+
+        // [폴백] 권한 거부나 에러 시 기본값(서울 종로구)으로 검색 수행
+        onSearch(60, 127);
+        onLocationChange(60, 127);
+        setGpsLoading(false);
+
+        if (error.code === error.PERMISSION_DENIED) {
+          console.warn(
+            "위치 권한이 거부되었습니다. 기본 위치(종로구)로 시작합니다.",
+          );
+        }
+      },
+      {
+        enableHighAccuracy: false, // 배터리 절약 및 응답 속도 향상 위해 false 권장 (Reverse Geocoding엔 충분)
+        timeout: 10000,
+        maximumAge: 3600000, // 1시간 이내 기록 재사용 허용 (속도 향상)
+      },
+    );
+  }
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(event.target as Node)
+      ) {
         setShowDropdown(false);
       }
     }
@@ -61,21 +159,33 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
     const matched = findAllRegionsByNxNy(nx, ny);
 
     if (matched.length === 0) {
-      if (nx === 60 && ny === 127) setSelectedRegionName("서울특별시 종로구 사직동");
+      if (nx === 60 && ny === 127)
+        setSelectedRegionName("서울특별시 종로구 사직동");
       else setSelectedRegionName(`위치 좌표: ${nx}, ${ny}`);
       return;
     }
 
     // 2. 만약 selectedRegionName이 이미 matched 목록 중 하나라면(사용자가 방금 선택함) 굳이 덮어쓰지 않음.
     // (단, 단순 문자열 비교라 정확하진 않지만 UX 개선용)
-    const currentName = selectedRegionName.replace(' (기본)', '').replace(' (GPS)', '').trim();
-    const isAlreadySet = matched.some(r => r.name === currentName || (r.s2 && currentName.includes(r.s2) && currentName.includes(r.s3)));
+    const currentName = selectedRegionName
+      .replace(" (기본)", "")
+      .replace(" (GPS)", "")
+      .trim();
+    const isAlreadySet = matched.some(
+      (r) =>
+        r.name === currentName ||
+        (r.s2 && currentName.includes(r.s2) && currentName.includes(r.s3)),
+    );
 
     if (isAlreadySet && selectedRegionName) return;
 
     // 3. 자동으로 대표 주소 설정
-    const s2List = Array.from(new Set(matched.map(r => r.s2).filter(Boolean)));
-    const s3List = Array.from(new Set(matched.map(r => r.s3).filter(Boolean)));
+    const s2List = Array.from(
+      new Set(matched.map((r) => r.s2).filter(Boolean)),
+    );
+    const s3List = Array.from(
+      new Set(matched.map((r) => r.s3).filter(Boolean)),
+    );
 
     if (s2List.length === 1) {
       const district = s2List[0];
@@ -99,7 +209,7 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
     if (activeIndex >= 0 && listRef.current) {
       const activeItem = listRef.current.children[activeIndex] as HTMLElement;
       if (activeItem) {
-        activeItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        activeItem.scrollIntoView({ block: "nearest", behavior: "smooth" });
       }
     }
   }, [activeIndex]);
@@ -109,7 +219,8 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
     setKeyword(val);
     setActiveIndex(-1);
 
-    if (val.length >= 1) { // 1글자부터 바로 검색되도록 수정하여 반응성 개선
+    if (val.length >= 1) {
+      // 1글자부터 바로 검색되도록 수정하여 반응성 개선
       const searchResults = searchRegions(val);
       setResults(searchResults);
       setShowDropdown(true);
@@ -129,7 +240,7 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
   };
 
   const handleSelectRegion = (region: Region) => {
-    onLocationChange(region.nx, region.ny);
+    onLocationChange(region.nx, region.ny, region);
     setSelectedRegionName(region.name);
     setKeyword(region.name);
     setResults([]);
@@ -139,7 +250,7 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!showDropdown || results.length === 0) {
-      if (e.key === 'Enter') {
+      if (e.key === "Enter") {
         e.preventDefault();
         onSearch();
       }
@@ -147,108 +258,52 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
     }
 
     switch (e.key) {
-      case 'ArrowDown':
+      case "ArrowDown":
         e.preventDefault();
-        setActiveIndex(prev => (prev < results.length - 1 ? prev + 1 : prev));
+        setActiveIndex((prev) => (prev < results.length - 1 ? prev + 1 : prev));
         break;
-      case 'ArrowUp':
+      case "ArrowUp":
         e.preventDefault();
-        setActiveIndex(prev => (prev > 0 ? prev - 1 : -1));
+        setActiveIndex((prev) => (prev > 0 ? prev - 1 : -1));
         break;
-      case 'Enter':
+      case "Enter":
         e.preventDefault();
         if (activeIndex >= 0) {
           handleSelectRegion(results[activeIndex]);
-          onSearch(results[activeIndex].nx, results[activeIndex].ny);
+          onSearch(
+            results[activeIndex].nx,
+            results[activeIndex].ny,
+            results[activeIndex],
+          );
         } else if (results.length > 0) {
           // 활성화된 항목이 없어도 결과가 있다면 첫 번째 항목 자동 선택
           handleSelectRegion(results[0]);
-          onSearch(results[0].nx, results[0].ny);
+          onSearch(results[0].nx, results[0].ny, results[0]);
         } else {
           setShowDropdown(false);
           onSearch();
         }
         setShowDropdown(false);
         break;
-      case 'Escape':
+      case "Escape":
         setShowDropdown(false);
         setActiveIndex(-1);
         break;
     }
   };
 
-  const handleCurrentLocation = () => {
-    setKeyword(''); // [UX 수정] 현재 위치 버튼 클릭 시 검색어 입력창 초기화
-
-    if (!navigator.geolocation) {
-      alert("브라우저가 위치 정보를 지원하지 않습니다.");
-      return;
-    }
-
-    setGpsLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        const { nx, ny } = dfs_xy_conv(latitude, longitude);
-
-        onLocationChange(nx, ny);
-
-        // [신규] 카카오 API를 통한 정확한 행정구역 주소 획득
-        const kakaoAddr = await getAddressFromCoords(latitude, longitude);
-
-        if (kakaoAddr) {
-          setSelectedRegionName(`${kakaoAddr} (현재 위치)`);
-        } else {
-          // [폴백] 카카오 API 실패 또는 키 미입력 시 기존 regions.json 기반 역추적
-          const matchedRegions = findAllRegionsByNxNy(nx, ny);
-          if (matchedRegions.length > 0) {
-            const s2List = Array.from(new Set(matchedRegions.map(r => r.s2).filter(Boolean)));
-            const s3List = Array.from(new Set(matchedRegions.map(r => r.s3).filter(Boolean)));
-
-            if (s2List.length > 0) {
-              const district = s2List[0];
-              const dong = s3List[0] || '';
-              setSelectedRegionName(`${district} ${dong} (GPS)`.trim());
-            } else {
-              setSelectedRegionName(matchedRegions[0].name + " (GPS)");
-            }
-          } else {
-            setSelectedRegionName(`현재 위치 (GPS)`);
-          }
-        }
-
-        onSearch(nx, ny);
-        setGpsLoading(false);
-      },
-      (error) => {
-        console.error("[GPS] Error:", error);
-
-        // [폴백] 권한 거부나 에러 시 기본값(서울 종로구)으로 검색 수행
-        onSearch(60, 127);
-        onLocationChange(60, 127);
-        setGpsLoading(false);
-
-        if (error.code === error.PERMISSION_DENIED) {
-          console.warn("위치 권한이 거부되었습니다. 기본 위치(종로구)로 시작합니다.");
-        }
-      },
-      {
-        enableHighAccuracy: false, // 배터리 절약 및 응답 속도 향상 위해 false 권장 (Reverse Geocoding엔 충분)
-        timeout: 10000,
-        maximumAge: 3600000 // 1시간 이내 기록 재사용 허용 (속도 향상)
-      }
-    );
-  };
-
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm mb-6 w-full max-w-sm mx-auto relative" ref={wrapperRef}>
+    <div
+      className="bg-white p-6 rounded-2xl shadow-sm mb-6 w-full max-w-md mx-auto relative"
+      ref={wrapperRef}
+    >
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-bold text-gray-800">위치 설정</h2>
         <button
           onClick={handleCurrentLocation}
           disabled={gpsLoading || loading}
           className={`p-2 w-32 rounded-lg border border-gray-200 text-gray-600 transition-colors flex items-center justify-center
-              ${(gpsLoading || loading) ? 'bg-white cursor-not-allowed opacity-70' : 'hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200'}`}
+              ${gpsLoading || loading ? "bg-white cursor-not-allowed opacity-70" : "hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"}`}
           title="내 현재 위치로 찾기"
         >
           <span className="text-sm">📍 현재 위치</span>
@@ -262,7 +317,9 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
 
       <div className="relative flex gap-2 items-end">
         <div className="flex-1 relative">
-          <span className="block text-sm text-gray-500 mb-1">지역 검색 (동 단위)</span>
+          <span className="block text-sm text-gray-500 mb-1">
+            지역 검색 (동 단위)
+          </span>
           <input
             type="text"
             placeholder="동, 읍, 면 단위로 검색 (예: 역삼동)"
@@ -284,7 +341,7 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
                   key={region.code}
                   onClick={() => handleSelectRegion(region)}
                   className={`px-4 py-3 cursor-pointer text-sm text-gray-700 border-b border-gray-50 last:border-none transition-colors
-                    ${index === activeIndex ? 'bg-blue-100 text-blue-700' : 'hover:bg-blue-50'}`}
+                    ${index === activeIndex ? "bg-blue-100 text-blue-700" : "hover:bg-blue-50"}`}
                 >
                   {region.name}
                 </li>
@@ -306,7 +363,7 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
             if (results.length > 0) {
               const bestMatch = results[0];
               handleSelectRegion(bestMatch);
-              onSearch(bestMatch.nx, bestMatch.ny);
+              onSearch(bestMatch.nx, bestMatch.ny, bestMatch);
             } else {
               onSearch();
             }
@@ -314,7 +371,7 @@ export default function LocationPicker({ nx, ny, onLocationChange, onSearch, loa
           }}
           disabled={loading || gpsLoading}
           className={`w-20 shrink-0 h-[50px] rounded-xl font-bold text-white transition-all whitespace-nowrap bg-blue-600 hover:bg-blue-700 shadow-md active:scale-95
-            ${(loading || gpsLoading) ? 'opacity-70 cursor-not-allowed' : ''}`}
+            ${loading || gpsLoading ? "opacity-70 cursor-not-allowed" : ""}`}
         >
           조회
         </button>
