@@ -877,3 +877,81 @@
 1. `npm run dev` 실행
 2. 브라우저 개발자 도구(F12) 콘솔 탭 확인
 3. 날씨 정보 로딩 시 `[API] ... - nx: ... ny: ...` 로그가 출력되는지 확인
+
+
+---
+# 📅 Archive Updated: 2026. 02. 04. 18:05:49
+# 📄 File: implementation_plan.md
+---
+
+# 인라인 검색창 제거 및 UI 슬림화 계획
+
+## Goal Description
+
+팝업 형태의 위치 검색 기능이 도입됨에 따라, 메인 화면 상단에 상시 노출되던 인라인 `LocationPicker`를 제거하여 화면을 더 넓고 깔끔하게 만듭니다. 이제 모든 위치 변경은 날씨 카드의 버튼을 통해 이루어집니다.
+
+## Proposed Changes
+
+### [Component] [App.tsx](file:///d:/myStudy/weather-app/src/App.tsx)
+
+- **인라인 검색창 제거**: `main` 태그 내부의 `LocationPicker` 렌더링 코드를 삭제합니다.
+- **초기 위치 감지 이관**: 기존에 `LocationPicker` 마운트 시 수행되던 `autoDetect` 기능을 `App.tsx`의 마운트 `useEffect`로 옮겨, 앱 실행 시 자동으로 현재 위치를 잡도록 유지합니다.
+
+### [Component] [LocationPicker.tsx](file:///d:/myStudy/weather-app/src/components/LocationPicker.tsx)
+
+- `any` 타입으로 지정되었던 `listRef` 관련 린트 에러를 정식 타입 정의로 수정하여 코드 품질을 높입니다.
+
+## Verification Plan
+
+### Manual Verification
+
+1. 앱 접속 시 상단 검색창이 사라지고 바로 날씨 카드가 보이는지 확인.
+2. 앱 초기 진입 시 "위치 정보를 받아오고 있어요" 로딩과 함께 위치 감지가 정상 작동하는지 확인.
+3. 날씨 카드를 통해 팝업을 열고 위치를 변경하는 전체 흐름이 매끄러운지 최종 점검.
+
+# 위치 검색 UI 및 GPS 정밀도 개선 계획
+
+## Goal Description
+
+1. **검색 UI 고도화**: `LocationPicker`의 검색 결과창을 기존 드롭다운 방식에서 고정된 영역(`height: 60dvh`, `min-height: 300px`)으로 변경하여 가독성과 사용성을 높입니다.
+2. **GPS 정밀도 개선**: 사용자가 위치한 '독산동' 대신 '신정동'으로 감지되는 문제를 해결하기 위해 GPS 수집 정밀도를 높이고 실시간 정보를 사용하도록 수정합니다.
+3. **코드 안정화**: `App.tsx`에서 발생한 임포트 누락 및 타입 오류를 모두 해결합니다.
+
+## Proposed Changes
+
+### [Component] [LocationPicker.tsx](file:///d:/myStudy/weather-app/src/components/LocationPicker.tsx)
+
+- **엔터(Enter) 및 검색 버튼 동작 변경**:
+  - 검색 시 첫 번째 항목을 자동 선택하거나 `onSearch`를 즉시 호출하던 로직을 제거합니다.
+  - 이제 엔터나 버튼 클릭 시에는 단순히 검색 결과 목록을 하단 박스에 갱신/표시하기만 합니다.
+- **지역 선택 로직 유지**:
+  - 목록에 나타난 지역명을 **직접 클릭**하거나, 화살표로 이동 후 엔터를 쳤을 때만 실제 위치가 반영되고 팝업이 닫히도록 합니다.
+- **접근성 유지**: 탭(Tab) 이동 및 키보드 화살표 내비게이션 기능을 강화된 상태로 유지합니다.
+- 검색 결과 영역(`div`)을 조건부 렌더링이 아닌 **상시 노출(고정 영역)**로 변경.
+- 리스트가 없을 때(초기 상태) 및 검색 결과가 없을 때의 UI 분기 처리:
+  - 초기 상태: "동네 이름을 입력해 보세요" 안내 문구 노출.
+  - 결과 없을 때: "검색 결과가 없습니다" 안내 문구 노출.
+- 높이 설정 유지: `h-[60dvh] min-h-[300px]`.
+- 팝업 내 스크롤 정책 최적화.
+- 검색 결과 리스트(`ul`) 스타일 수정:
+  - `absolute` 제거 및 부모 레이아웃 내 고정 배치.
+  - 클래스 추가: `h-[60dvh] min-h-[300px] overflow-y-auto`.
+- 검색 결과가 없을 때의 안내 문구도 해당 영역 내에 정렬되도록 수정.
+
+### [Component] [App.tsx](file:///d:/myStudy/weather-app/src/App.tsx)
+
+- `onSearch`가 `LocationPicker`의 검색 버튼에서 직접 호출되지 않도록 조정하여 의도치 않은 날씨 정보 갱신을 방지합니다.
+- `onSearch`는 위치가 최종 확정되었을 때만 실행됩니다.
+- `searchRegions` 임포트 및 `Region` 타입 관련 잔여 린트 에러 해결.
+- GPS 정밀도 옵션 최종 확인.
+- `searchRegions` 임포트 추가 및 `Region` 타입 적용.
+- `detectCurrentLocation` 내 GPS 옵션 강화 (`enableHighAccuracy: true`, `maximumAge: 0`).
+- 위치 감지 실패 시 사용자 알림(alert) 추가.
+
+## Verification Plan
+
+### Manual Verification
+
+1. 팝업에서 지역 검색 시 결과창이 넓게(`60dvh`) 나타나는지 확인.
+2. 목록이 300px 이상의 높이를 유지하며 스크롤이 잘 되는지 확인.
+3. 📍 버튼 클릭 시 '독산동' 등 현재 위치를 정확하게 잡아오는지 확인.

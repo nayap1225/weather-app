@@ -11,7 +11,6 @@ interface Props {
   onSearch: (nx?: number, ny?: number, region?: Region) => void;
   loading: boolean;
   onClose?: () => void;
-  autoDetect?: boolean;
   onCurrentLocation: () => void;
   gpsLoading: boolean;
 }
@@ -24,7 +23,7 @@ export default function LocationPicker({
   onSearch,
   loading,
   onClose,
-  autoDetect = true,
+  onClose,
   onCurrentLocation,
   gpsLoading,
 }: Props) {
@@ -34,7 +33,7 @@ export default function LocationPicker({
   const [activeIndex, setActiveIndex] = useState(-1);
 
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const listRef = useRef<HTMLUListElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const displayRegionName = selectedRegion?.name || `좌표: ${nx}, ${ny}`;
@@ -67,12 +66,7 @@ export default function LocationPicker({
       inputRef.current.focus();
     }
 
-    if (autoDetect) {
-      onCurrentLocation();
-    }
-
     return () => document.removeEventListener("mousedown", handleClickOutside);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -194,7 +188,7 @@ export default function LocationPicker({
                   <div className="mt-4 bg-white/50 backdrop-blur-md border border-white/20 rounded-2xl overflow-hidden shadow-inner flex flex-col h-[60dvh] min-h-[300px]">
                     {results.length > 0 ? (
                       <div
-                        ref={listRef as any}
+                        ref={listRef}
                         className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-gray-300"
                       >
                         {results.map((region, index) => (
@@ -240,7 +234,7 @@ export default function LocationPicker({
                   showDropdown &&
                   results.length > 0 && (
                     <div
-                      ref={listRef as any}
+                      ref={listRef}
                       className="absolute z-50 w-full bg-white/95 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl mt-2 max-h-64 overflow-y-auto p-2"
                     >
                       {results.map((region, index) => (

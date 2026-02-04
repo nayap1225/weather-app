@@ -344,6 +344,11 @@ function App() {
   }, [handleLocationChange, handleSearch]);
 
   useEffect(() => {
+    // [개선] 앱 초기 진입 시 자동 위치 감지 (기존 LocationPicker 로직 이관)
+    detectCurrentLocation();
+  }, [detectCurrentLocation]); // 의존성 추가
+
+  useEffect(() => {
     // [중요] 사용자가 이미 선택한 정보가 있고, 그 정보의 좌표가 현재 상태(nx, ny)와 일치한다면
     // 굳이 격자 기반 동네 목록으로 다시 덮어쓰지 않음 (검색 결과 유지)
     if (
@@ -391,17 +396,8 @@ function App() {
       <div className="flex flex-col flex-auto items-center w-full max-w-md mx-auto px-4 py-8 rounded-2xl backdrop-blur-sm transition-colors duration-500 bg-white/5 border border-white/5">
         <HeaderLayout />
 
-        <main className="w-full max-w-md">
-          <LocationPicker
-            nx={nx}
-            ny={ny}
-            selectedRegion={selectedRegion}
-            onLocationChange={handleLocationChange}
-            onSearch={handleSearch}
-            loading={loading}
-            onCurrentLocation={detectCurrentLocation}
-            gpsLoading={gpsLoading}
-          />
+        <main className="w-full max-w-md pt-4">
+          {/* 인라인 검색창 제거 (이제 팝업으로 통합) */}
 
           {error && (
             <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6 text-sm flex items-center gap-2 border border-red-100 shadow-sm">

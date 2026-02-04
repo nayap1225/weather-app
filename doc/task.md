@@ -399,3 +399,31 @@
 - [x] Create implementation plan
 - [x] Add console logs to `src/api/weather.ts`
 - [ ] Verify (User check)
+
+
+---
+# 📅 Archive Updated: 2026. 02. 04. 18:05:49
+# 📄 File: task.md
+---
+
+# 긴급 오류 복구 및 기능 안정화
+
+- [x] 코드 전체 점검 및 문법 오류 식별
+- [x] `LocationPicker.tsx` 구문 오류 및 렌더링 로직 복구
+- [x] `App.tsx` 타입 정의 및 프롭 전달 정합성 확보
+- [x] GPS 위치 정밀도 및 주소 매칭 개선 (독산동 오인식 해결)
+- [x] 위치 검색 결과창 UI 확장 (60dvh, 300px 적용)
+- [x] 검색 인터렉션 변경 (엔터 시 목록 노출, 선택 시 팝업 닫기)
+
+## 🎒 준비물 추천 로직 개선
+
+- [x] `itemUtils.ts` PTY 코드 매핑 확장 (5, 6, 7 추가)
+- [x] `comprehensive_preview.html` 필수 준비물 시뮬레이션 로직 추가
+- [x] 비/눈/미세먼지 상황별 준비물 노출 최종 검증
+
+## 📍 위치 및 날씨 조회 안정화
+
+- [x] 날씨 조회 및 위치 변경 안 됨 현상 해결
+- [x] `LocationPicker.tsx` 구문 오류 및 중복 제거
+- [x] `App.tsx` 위치 선택 데이터 정합성 강화
+- [x] 무한 루프(깜빡임) 원칙적 차단
