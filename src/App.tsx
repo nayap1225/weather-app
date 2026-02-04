@@ -394,10 +394,10 @@ function App() {
         onThemeChange={setTextColor}
       />
 
-      <div className="flex flex-col flex-auto items-center w-full max-w-md mx-auto px-4 py-8 rounded-2xl backdrop-blur-sm transition-colors duration-500 bg-white/5 border border-white/5">
+      <div className="flex flex-col flex-auto items-center w-full max-w-md mx-auto px-4 py-8 rounded-2xl backdrop-blur-sm transition-colors duration-500 bg-white/10 border border-white/5">
         <HeaderLayout />
 
-        <main className="w-full max-w-md pt-4">
+        <main className="w-full max-w-md">
           {/* 인라인 검색창 제거 (이제 팝업으로 통합) */}
 
           {error && (

@@ -5,6 +5,8 @@ import {
   calculateFeelsLike,
   getTempComparisonInfo,
 } from "../utils/weatherUtils";
+import { LocateFixed } from "lucide-react";
+import { MapPin } from "lucide-react";
 
 interface Props {
   data: WeatherItem[];
@@ -179,39 +181,60 @@ export default function WeatherNowCard({
   const pm25Info = dustData ? getPm25GradeInfo(dustData.pm25Value) : null;
 
   return (
-    <div className="bg-gradient-to-br from-blue-500/80 to-blue-600/80 p-6 rounded-[2.5rem] shadow-2xl backdrop-blur-md border border-white/20 text-white w-full max-w-md mx-auto mb-6 transform transition hover:scale-[1.01]">
+    <div className="bg-gradient-to-br from-blue-500/80 to-blue-600/80 p-6 rounded-[1rem] shadow-2xl backdrop-blur-md border border-white/20 text-white w-full max-w-md mx-auto mb-6 transform transition hover:scale-[1.01]">
       {/* Location Bar (Inline Style) */}
-      <div className="flex justify-between items-center mb-6 pl-1">
-        <div className="flex items-center gap-2">
+
+      <div className="flex gap-2 mb-6 justify-between">
+        <strong className="text-lg font-black break-keep tracking-tight drop-shadow-sm group-hover:text-blue-100 transition-colors">
+          {locationName}
+        </strong>
+
+        <div className="flex items-center gap-1.5 self-start">
           <button
             onClick={onCurrentLocation}
             disabled={gpsLoading}
-            className={`bg-white/20 p-2 rounded-xl backdrop-blur-md border border-white/10 transition-all active:scale-90
+            className={`bg-white/20 p-1.5 rounded-full backdrop-blur-md transition-all active:scale-90
               ${gpsLoading ? "animate-pulse ring-2 ring-white/50 shadow-lg" : "hover:bg-white/30 shadow-sm"}`}
             title="현재 위치로 설정"
           >
             <span
-              className={`text-xl block ${gpsLoading ? "animate-spin" : ""}`}
+              className={`text-xs block ${gpsLoading ? "animate-spin" : ""}`}
             >
-              📍
+              <LocateFixed size={16} />
             </span>
           </button>
           <button
             onClick={onOpenModal}
-            className="text-left group transition-all active:scale-95"
+            className="bg-white/20 p-1.5 rounded-full backdrop-blur-md  transition-all active:scale-90"
           >
-            <div className="flex items-center gap-1.5">
-              <span className="text-lg font-black tracking-tight drop-shadow-sm group-hover:text-blue-100 transition-colors">
-                {locationName}
-              </span>
-              <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded-md opacity-60 group-hover:opacity-100 transition-opacity">
-                수정
-              </span>
-            </div>
+            <span className="text-xs block">
+              <MapPin size={16} />
+            </span>
           </button>
         </div>
+      </div>
 
-        <div className="bg-white/20 p-2 rounded-xl backdrop-blur-md shadow-inner">
+      <div className="flex justify-between items-start mb-6">
+        <div className="w-full">
+          <h2 className="flex gap-2 items-center text-3xl font-black tracking-tighter drop-shadow-sm w-full">
+            {getPtyText(pty)}
+
+            <span className="text-3xl filter drop-shadow-md">
+              {pty !== "0"
+                ? pty === "3"
+                  ? "❄️"
+                  : "☔"
+                : sky === "1"
+                  ? "☀️"
+                  : "☁️"}
+            </span>
+          </h2>
+          <p className="w-full text-blue-50/90 text-sm mt-2 font-bold break-keep leading-relaxed text-left">
+            {getMoodText()}
+          </p>
+        </div>
+
+        {/* <div className="bg-white/20 p-2 rounded-xl backdrop-blur-md shadow-inner">
           <span className="text-3xl filter drop-shadow-md">
             {pty !== "0"
               ? pty === "3"
@@ -221,18 +244,7 @@ export default function WeatherNowCard({
                 ? "☀️"
                 : "☁️"}
           </span>
-        </div>
-      </div>
-
-      <div className="flex justify-between items-start mb-6">
-        <div>
-          <h2 className="text-3xl font-black tracking-tighter drop-shadow-sm">
-            {getPtyText(pty)}
-          </h2>
-          <p className="text-blue-50/90 text-sm mt-2 font-bold break-keep leading-relaxed text-left max-w-[240px]">
-            {getMoodText()}
-          </p>
-        </div>
+        </div> */}
       </div>
 
       <div className="flex items-end gap-2 mb-4">

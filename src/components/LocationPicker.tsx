@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { searchRegions } from "../utils/regionUtils";
 import type { Region } from "../types/region";
 import { X } from "lucide-react";
+import { Search } from "lucide-react";
 
 interface Props {
   nx: number;
@@ -147,14 +148,14 @@ export default function LocationPicker({
   };
 
   return (
-    <div className="w-full mb-4 px-2">
+    <div className="w-full px-2">
       <div
-        className="relative bg-white/80 backdrop-blur-xl w-full rounded-[2.5rem] border border-white/20 p-6 overflow-y-auto max-h-[90vh] md:p-8 shadow-xl"
+        className="relative bg-white/95 backdrop-blur-xl w-full rounded-[2.5rem] border border-white/20 p-6 overflow-y-auto max-h-[90vh] md:p-8 shadow-xl"
         ref={wrapperRef}
       >
-        <div className="space-y-5">
+        <div className="space-y-4">
           <div className="flex justify-between items-center pr-2">
-            <label className="block text-[12px] font-black text-gray-800 uppercase tracking-widest pl-2">
+            <label className="block text-[18px] font-black text-gray-800 uppercase tracking-widest pl-2">
               지역 검색
             </label>
             {onClose && (
@@ -163,7 +164,7 @@ export default function LocationPicker({
                 className="text-gray-400 hover:text-gray-800 p-1.5 rounded-full hover:bg-gray-100 transition-colors"
                 title="닫기"
               >
-                <X size={18} />
+                <X size={28} color="#000000" />
               </button>
             )}
           </div>
@@ -181,85 +182,6 @@ export default function LocationPicker({
                   onFocus={handleFocus}
                   autoComplete="off"
                 />
-
-                {/* [개선] 팝업(onClose 존재)일 때만 고정 영역 UI 적용, 인라인일 때는 기존 드롭다운 유지 */}
-                {onClose ? (
-                  <div className="mt-4 bg-white/50 backdrop-blur-md border border-white/20 rounded-2xl overflow-hidden shadow-inner flex flex-col h-[60dvh] min-h-[300px]">
-                    {results.length > 0 ? (
-                      <div
-                        ref={listRef}
-                        className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-gray-300"
-                      >
-                        {results.map((region, index) => (
-                          <button
-                            key={region.code}
-                            type="button"
-                            onClick={() => handleSelectRegion(region)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") handleSelectRegion(region);
-                            }}
-                            className={`w-full text-left px-4 py-4 cursor-pointer text-sm font-bold rounded-xl transition-all mb-1 outline-none
-                              ${index === activeIndex ? "bg-blue-600 text-white shadow-lg ring-2 ring-blue-300 ring-offset-1" : "text-slate-700 hover:bg-white/60 focus:bg-white/60"}`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <span>{region.name}</span>
-                              <span className="text-[10px] opacity-40 uppercase">
-                                Select
-                              </span>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    ) : keyword.length >= 1 ? (
-                      <div className="flex-1 flex items-center justify-center p-6 text-center text-slate-400 text-sm font-bold">
-                        <div className="animate-in fade-in zoom-in duration-300">
-                          <p className="text-4xl mb-4">🔍</p>
-                          <p>검색 결과가 없습니다</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex-1 flex items-center justify-center p-6 text-center text-slate-200 text-sm font-bold">
-                        <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-                          <p className="text-4xl mb-4 opacity-20">🏠</p>
-                          <p className="text-slate-400">
-                            찾으시는 동네를 입력해 주세요
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  /* 인라인 모드: 기존의 절대 위치 드롭다운 방식 */
-                  showDropdown &&
-                  results.length > 0 && (
-                    <div
-                      ref={listRef}
-                      className="absolute z-50 w-full bg-white/95 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl mt-2 max-h-64 overflow-y-auto p-2"
-                    >
-                      {results.map((region, index) => (
-                        <button
-                          key={region.code}
-                          type="button"
-                          onClick={() => handleSelectRegion(region)}
-                          className={`w-full text-left px-4 py-3 cursor-pointer text-sm font-bold rounded-xl transition-all outline-none
-                            ${index === activeIndex ? "bg-blue-600 text-white shadow-lg ring-2 ring-blue-300" : "text-slate-700 hover:bg-slate-100 focus:bg-slate-100"}`}
-                        >
-                          {region.name}
-                        </button>
-                      ))}
-                    </div>
-                  )
-                )}
-
-                {/* 인라인 모드 검색 결과 없음 처리 */}
-                {!onClose &&
-                  showDropdown &&
-                  keyword.length >= 2 &&
-                  results.length === 0 && (
-                    <div className="absolute z-50 w-full bg-white/95 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl mt-2 p-6 text-center text-slate-400 text-sm font-bold">
-                      검색 결과가 없습니다 🔍
-                    </div>
-                  )}
               </div>
 
               <button
@@ -274,36 +196,90 @@ export default function LocationPicker({
                 className="w-14 h-14 bg-white border border-gray-300 text-white rounded-xl font-semibold flex items-center justify-center hover:bg-white active:scale-95 transition-all group"
               >
                 <span className="text-xl group-hover:scale-110 transition-transform">
-                  🔍
+                  <Search size={24} color="#000000" />
                 </span>
               </button>
             </div>
           </div>
 
-          <div className="flex gap-2">
-            <button
-              onClick={onCurrentLocation}
-              disabled={gpsLoading || loading}
-              className={`flex-1 p-4 rounded-2xl border transition-all flex items-center justify-center gap-2 font-black text-xs
-                  ${
-                    gpsLoading || loading
-                      ? "bg-white/5 border-white/5 text-white/20 cursor-not-allowed"
-                      : "bg-blue-600/20 border-blue-400/30 text-white hover:bg-blue-600/30 shadow-sm"
-                  }`}
-            >
-              <span className={gpsLoading ? "animate-spin" : ""}>📍</span>
-              {gpsLoading ? "위치 찾는 중..." : "내 위치 설정"}
-            </button>
-
-            <div className="flex-1 p-4 bg-white/5 rounded-2xl border border-white/5 text-left flex flex-col justify-center">
-              <p className="text-[8px] font-black text-white/30 uppercase tracking-widest leading-none mb-1">
-                Selected
-              </p>
-              <p className="text-xs font-black text-white/90 truncate">
-                {displayRegionName}
-              </p>
+          {/* [개선] 팝업(onClose 존재)일 때만 고정 영역 UI 적용, 인라인일 때는 기존 드롭다운 유지 */}
+          {onClose ? (
+            <div className="mt-4 bg-white/50 backdrop-blur-md border border-white/20 rounded-2xl overflow-hidden shadow-inner flex flex-col h-[60dvh] min-h-[300px]">
+              {results.length > 0 ? (
+                <div
+                  ref={listRef}
+                  className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-gray-300"
+                >
+                  {results.map((region, index) => (
+                    <button
+                      key={region.code}
+                      type="button"
+                      onClick={() => handleSelectRegion(region)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleSelectRegion(region);
+                      }}
+                      className={`w-full text-left px-4 py-4 cursor-pointer text-sm font-bold rounded-xl transition-all mb-1 outline-none
+                              ${index === activeIndex ? "bg-blue-600 text-white shadow-lg ring-2 ring-blue-300 ring-offset-1" : "text-slate-700 hover:bg-white/60 focus:bg-white/60"}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span>{region.name}</span>
+                        <span className="text-[10px] opacity-40 uppercase">
+                          Select
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : keyword.length >= 1 ? (
+                <div className="flex-1 flex items-center justify-center p-6 text-center text-slate-400 text-sm font-bold">
+                  <div className="animate-in fade-in zoom-in duration-300">
+                    <p className="text-4xl mb-4">🔍</p>
+                    <p>검색 결과가 없습니다</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-1 flex items-center justify-center p-6 text-center text-slate-200 text-sm font-bold">
+                  <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                    <p className="text-4xl mb-4 opacity-20">🏠</p>
+                    <p className="text-slate-400">
+                      찾으시는 동네를 입력해 주세요
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
+          ) : (
+            /* 인라인 모드: 기존의 절대 위치 드롭다운 방식 */
+            showDropdown &&
+            results.length > 0 && (
+              <div
+                ref={listRef}
+                className="absolute z-50 w-full bg-white/95 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl mt-2 max-h-64 overflow-y-auto p-2"
+              >
+                {results.map((region, index) => (
+                  <button
+                    key={region.code}
+                    type="button"
+                    onClick={() => handleSelectRegion(region)}
+                    className={`w-full text-left px-4 py-3 cursor-pointer text-sm font-bold rounded-xl transition-all outline-none
+                            ${index === activeIndex ? "bg-blue-600 text-white shadow-lg ring-2 ring-blue-300" : "text-slate-700 hover:bg-slate-100 focus:bg-slate-100"}`}
+                  >
+                    {region.name}
+                  </button>
+                ))}
+              </div>
+            )
+          )}
+
+          {/* 인라인 모드 검색 결과 없음 처리 */}
+          {!onClose &&
+            showDropdown &&
+            keyword.length >= 2 &&
+            results.length === 0 && (
+              <div className="absolute z-50 w-full bg-white/95 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl mt-2 p-6 text-center text-slate-400 text-sm font-bold">
+                검색 결과가 없습니다 🔍
+              </div>
+            )}
         </div>
       </div>
     </div>
