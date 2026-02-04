@@ -181,7 +181,7 @@ export default function WeatherNowCard({
   const pm25Info = dustData ? getPm25GradeInfo(dustData.pm25Value) : null;
 
   return (
-    <div className="bg-gradient-to-br from-blue-500/80 to-blue-600/80 p-6 rounded-[1rem] shadow-2xl backdrop-blur-md border border-white/20 text-white w-full max-w-md mx-auto mb-6 transform transition hover:scale-[1.01]">
+    <div className="bg-gradient-to-br from-blue-500/80 to-blue-600/80 p-6 rounded-[1rem] shadow-2xl backdrop-blur-md border border-white/20 text-white w-full max-w-md mx-auto mb-4">
       {/* Location Bar (Inline Style) */}
 
       <div className="flex gap-2 mb-6 justify-between">
@@ -258,17 +258,17 @@ export default function WeatherNowCard({
 
       {/* [개선] 기온 비교 메시지 영역 (색상 강조 적용) */}
       {(yesterdayUI || tomorrowUI) && (
-        <div className="mb-6 space-y-2 p-4 rounded-2xl bg-black/10 border border-white/5 backdrop-blur-sm shadow-inner text-left">
+        <div className="mb-2 space-y-2 p-4 rounded-2xl bg-black/10 border border-white/5 backdrop-blur-sm shadow-inner text-left">
           {yesterdayUI}
           {tomorrowUI}
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2">
         {/* Humidity */}
         <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md border border-white/5 hover:bg-white/20 transition">
           <p className="text-[10px] text-blue-200 mb-1 uppercase font-bold tracking-tighter opacity-70">
-            Humidity
+            습도
           </p>
           <p className="text-lg font-bold">
             {humidity}
@@ -279,7 +279,7 @@ export default function WeatherNowCard({
         {/* Wind */}
         <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md border border-white/5 hover:bg-white/20 transition">
           <p className="text-[10px] text-blue-200 mb-1 uppercase font-bold tracking-tighter opacity-70">
-            Wind
+            풍속
           </p>
           <div className="flex items-baseline gap-1">
             <p className="text-lg font-bold">{windSpeed}</p>
@@ -289,9 +289,9 @@ export default function WeatherNowCard({
         </div>
 
         {/* PM10 */}
-        <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md border border-white/5 hover:bg-white/20 transition">
+        <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md border border-white/5 hover:bg-white/20 transition hidden">
           <p className="text-[10px] text-blue-200 mb-1 uppercase font-bold tracking-tighter opacity-70">
-            Fine Dust (PM10)
+            미세먼지 (PM10)
           </p>
           <div className="flex justify-between items-end">
             <p className="text-lg font-bold">{dustData?.pm10Value || "-"}</p>
@@ -304,7 +304,7 @@ export default function WeatherNowCard({
         </div>
 
         {/* PM2.5 */}
-        <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md border border-white/5 hover:bg-white/20 transition">
+        <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md border border-white/5 hover:bg-white/20 transition hidden">
           <p className="text-[10px] text-blue-200 mb-1 uppercase font-bold tracking-tighter opacity-70">
             Ultra Fine (PM2.5)
           </p>
