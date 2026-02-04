@@ -38,6 +38,7 @@ export default function LocationPicker({
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  const gpsCoords = useRef<{ nx: number; ny: number } | null>(null); // [신규] GPS 좌표 추적용 ref
 
   async function handleCurrentLocation() {
     setKeyword(""); // [UX 수정] 현재 위치 버튼 클릭 시 검색어 입력창 초기화
@@ -67,12 +68,24 @@ export default function LocationPicker({
           const matched = matchedRegions.find(
             (r) => kakaoAddr.includes(r.s3) || kakaoAddr.includes(r.s2),
           );
+
           if (matched) {
             onLocationChange(nx, ny, matched);
             onSearch(nx, ny, matched);
           } else {
-            onLocationChange(nx, ny);
-            onSearch(nx, ny);
+            // [신규] 매칭되는 Region이 없더라도 Kakao API 주소를 신뢰하여 가상 Region 객체 생성
+            // 이를 통해 LocationPicker state뿐만 아니라 상위 App 컴포넌트에도 정확한 주소 전달
+            const virtualRegion: Region = {
+              nx,
+              ny,
+              name: kakaoAddr,
+              s1: kakaoAddr.split(" ")[0] || "", // 예: 서울
+              s2: kakaoAddr.split(" ")[1] || "", // 예: 금천구
+              s3: kakaoAddr.split(" ")[2] || "", // 예: 독산동
+              code: "GPS_VIRTUAL",
+            };
+            onLocationChange(nx, ny, virtualRegion);
+            onSearch(nx, ny, virtualRegion);
           }
         } else {
           // [폴백] 카카오 API 실패 또는 키 미입력 시 기존 regions.json 기반 역추적
@@ -103,7 +116,7 @@ export default function LocationPicker({
           }
         }
 
-        // onSearch(nx, ny); // Moved inside methods for explicit region passing
+        gpsCoords.current = { nx, ny }; // [신규] 현재 GPS 좌표 기록
         setGpsLoading(false);
       },
       (error) => {
@@ -155,13 +168,29 @@ export default function LocationPicker({
     // 하지만 사용자가 검색해서 클릭했을 때는 setSelectedRegionName이 먼저 실행됨.
     // 따라서 여기서는 '초기 로딩' 이거나 '외부에서 좌표가 변했을 때(GPS 등)'를 커버해야 함.
 
+    // [중요] GPS로 설정된 정확한 주소가 있고, 좌표가 변하지 않았다면 Grid 역추적 덮어쓰기 방지
+    if (
+      gpsCoords.current &&
+      gpsCoords.current.nx === nx &&
+      gpsCoords.current.ny === ny &&
+      selectedRegionName.includes("(현재 위치)")
+    ) {
+      return;
+    }
+
     // 좌표로 해당하는 모든 동네 찾기
     const matched = findAllRegionsByNxNy(nx, ny);
 
     if (matched.length === 0) {
-      if (nx === 60 && ny === 127)
-        setSelectedRegionName("서울특별시 종로구 사직동");
-      else setSelectedRegionName(`위치 좌표: ${nx}, ${ny}`);
+      if (nx === 60 && ny === 127) {
+        // 기본 위치일 때만 초기화, 그 외에는 좌표 표시 유지
+        if (!selectedRegionName)
+          setSelectedRegionName("서울특별시 종로구 사직동");
+      } else {
+        if (!selectedRegionName.includes("(현재 위치)")) {
+          setSelectedRegionName(`위치 좌표: ${nx}, ${ny}`);
+        }
+      }
       return;
     }
 
@@ -323,7 +352,7 @@ export default function LocationPicker({
           <input
             type="text"
             placeholder="동, 읍, 면 단위로 검색 (예: 역삼동)"
-            className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition text-gray-800"
             value={keyword}
             onChange={handleSearchInput}
             onKeyDown={handleKeyDown}

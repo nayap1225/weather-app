@@ -54,6 +54,7 @@ export default defineConfig(({ mode }) => {
       }),
     ],
     server: {
+      host: "0.0.0.0",
       proxy: {
         "/api/weather": {
           target: "https://apis.data.go.kr",

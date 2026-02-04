@@ -317,11 +317,11 @@ function App() {
         className={`flex flex-col flex-auto items-center w-full max-w-md mx-auto px-4 py-8 rounded-2xl backdrop-blur-sm transition-colors duration-500 bg-white/10 border border-black/5`}
         // className={`flex flex-col flex-auto items-center w-full max-w-md mx-auto px-4 py-8 rounded-2xl backdrop-blur-sm transition-colors duration-500 ${textColor === "light" ? "bg-black/10" : "bg-white/10 border border-black/5"}`}
       >
-        <header className="mb-8 text-center text-white/90 drop-shadow-md">
+        <header className="mb-8 text-center drop-shadow-md">
           <h1 className="text-3xl font-extrabold tracking-tight">
             🌤️ 날씨 어때?
           </h1>
-          <p className="text-gray-100 text-sm mt-2 font-medium opacity-80">
+          <p className="text-sm mt-2 font-medium">
             오늘의 날씨와 옷차림을 확인하세요
           </p>
         </header>
