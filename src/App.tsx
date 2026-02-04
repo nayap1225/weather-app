@@ -344,9 +344,10 @@ function App() {
   }, [handleLocationChange, handleSearch]);
 
   useEffect(() => {
-    // [개선] 앱 초기 진입 시 자동 위치 감지 (기존 LocationPicker 로직 이관)
+    // [개선] 앱 초기 진입 시 자동 위치 감지
+    // 빈 배열을 사용하여 마운트 시 한 번만 실행되도록 보장 (무한 루프 방지)
     detectCurrentLocation();
-  }, [detectCurrentLocation]); // 의존성 추가
+  }, []); // 의존성에서 detectCurrentLocation 제거
 
   useEffect(() => {
     // [중요] 사용자가 이미 선택한 정보가 있고, 그 정보의 좌표가 현재 상태(nx, ny)와 일치한다면

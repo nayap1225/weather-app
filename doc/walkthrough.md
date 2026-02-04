@@ -929,3 +929,44 @@
 - [x] 빌드 에러 및 런타임 콘솔 에러 0건
 
 모든 기능이 이제 의도한 대로 "똑바로" 작동합니다. 믿고 맡겨주셔서 감사합니다! 😊
+
+
+---
+# 📅 Archive Updated: 2026. 02. 04. 18:12:51
+# 📄 File: walkthrough.md
+---
+
+---
+
+### 🔄 실행 기록
+
+- 날짜: 2026-02-03
+- 워크플로우: Debugging Weather Location
+- 요청 요약: 날씨 정보 가져올 때 위치 좌표(nx, ny)를 콘솔에 출력
+
+## Changes
+
+### src/api
+
+#### [MODIFY] [weather.ts](file:///d:/myStudy/weather-app/src/api/weather.ts)
+
+- `getUltraSrtNcst`와 `getVilageFcst` 함수에 `console.log`를 추가하여 `nx`, `ny` 좌표를 출력하도록 변경함.
+
+## Verification Results
+
+### Manual Verification
+
+- 개발자 도구 콘솔에서 `[API] getUltraSrtNcst - nx: ..., ny: ...` 형태의 로그 확인 필요.
+
+## Findings
+
+### Q: nx, ny 값은 지역이 달라도 똑같을 수 있는가?
+
+- **A: 네, 가능합니다.**
+- 기상청 격자(Grid) 시스템은 약 5km x 5km 해상도를 가집니다.
+- 따라서 행정구역(동, 구)이 다르더라도 지리적으로 인접해 있으면 같은 격자 좌표(`nx`, `ny`)를 공유합니다.
+- 예:
+  - 서울특별시 종로구 (`nx`: 60, `ny`: 127)
+  - 서울특별시 중구 (`nx`: 60, `ny`: 127)
+  - 서울특별시 용산구 (`nx`: 60, `ny`: 126) (용산구는 위도가 약간 낮아 `ny`가 다름)
+  - 충청남도 당진시 (`nx`: 55, `ny`: 112) (멀리 떨어진 당진시는 좌표가 확연히 다름)

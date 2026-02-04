@@ -427,3 +427,21 @@
 - [x] `LocationPicker.tsx` 구문 오류 및 중복 제거
 - [x] `App.tsx` 위치 선택 데이터 정합성 강화
 - [x] 무한 루프(깜빡임) 원칙적 차단
+
+
+---
+# 📅 Archive Updated: 2026. 02. 04. 18:12:51
+# 📄 File: task.md
+---
+
+---
+
+### 🔄 실행 기록
+
+- 날짜: 2026-02-03
+- 워크플로우: Debugging Weather Location
+- 요청 요약: 날씨 정보 가져올 때 위치 좌표(nx, ny)를 콘솔에 출력
+
+- [x] Create implementation plan
+- [x] Add console logs to `src/api/weather.ts`
+- [ ] Verify (User check)

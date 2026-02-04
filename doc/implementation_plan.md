@@ -955,3 +955,42 @@
 1. 팝업에서 지역 검색 시 결과창이 넓게(`60dvh`) 나타나는지 확인.
 2. 목록이 300px 이상의 높이를 유지하며 스크롤이 잘 되는지 확인.
 3. 📍 버튼 클릭 시 '독산동' 등 현재 위치를 정확하게 잡아오는지 확인.
+
+
+---
+# 📅 Archive Updated: 2026. 02. 04. 18:12:51
+# 📄 File: implementation_plan.md
+---
+
+---
+
+### 🔄 실행 기록
+
+- 날짜: 2026-02-03
+- 워크플로우: Debugging Weather Location
+- 요청 요약: 날씨 정보 가져올 때 위치 좌표(nx, ny)를 콘솔에 출력
+
+# [Goal Description]
+
+날씨 API를 호출할 때 사용되는 위치 좌표(`nx`, `ny`)를 콘솔에 출력하여, 현재 어떤 위치 정보를 기반으로 데이터를 요청하는지 확인합니다.
+
+## User Review Required
+
+없음.
+
+## Proposed Changes
+
+### src/api
+
+#### [MODIFY] [weather.ts](file:///d:/myStudy/weather-app/src/api/weather.ts)
+
+- `getUltraSrtNcst` 함수 진입부에 `console.log("[API] getUltraSrtNcst - nx:", nx, "ny:", ny)` 추가
+- `getVilageFcst` 함수 진입부에 `console.log("[API] getVilageFcst - nx:", nx, "ny:", ny)` 추가
+
+## Verification Plan
+
+### Manual Verification
+
+1. `npm run dev` 실행
+2. 브라우저 개발자 도구(F12) 콘솔 탭 확인
+3. 날씨 정보 로딩 시 `[API] ... - nx: ... ny: ...` 로그가 출력되는지 확인

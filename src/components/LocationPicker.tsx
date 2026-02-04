@@ -23,7 +23,6 @@ export default function LocationPicker({
   onSearch,
   loading,
   onClose,
-  onClose,
   onCurrentLocation,
   gpsLoading,
 }: Props) {
