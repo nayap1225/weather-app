@@ -88,7 +88,7 @@ export const getOutfitByTemperature = (temp: number): OutfitRecommendation => {
     };
   } else if (temp >= 5) {
     return {
-      summary: "겨울이 시작되었어요. 따뜻하게 입으세요.",
+      summary: "많이 추워요. 따뜻하게 입으세요.",
       items: [
         { name: "코트", icon: "🧥" },
         { name: "가죽자켓", icon: "🧥" },

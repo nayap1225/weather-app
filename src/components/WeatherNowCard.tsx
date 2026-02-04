@@ -1,20 +1,42 @@
 import type { WeatherItem } from "../api/weather";
 import type { DustItem } from "../api/dust";
+import { getPm10GradeInfo, getPm25GradeInfo } from "../utils/dustUtils";
+import {
+  calculateFeelsLike,
+  getTempComparisonInfo,
+} from "../utils/weatherUtils";
 
 interface Props {
   data: WeatherItem[];
   dustData: DustItem | null;
+  yesterdayData: WeatherItem[] | null;
+  forecastData: WeatherItem[] | null;
+  locationName: string;
+  onOpenModal: () => void;
+  onCurrentLocation: () => void;
+  gpsLoading: boolean;
 }
 
-export default function WeatherNowCard({ data, dustData }: Props) {
-  const getValue = (category: string) =>
-    data.find((item) => item.category === category)?.obsrValue || "-";
+export default function WeatherNowCard({
+  data,
+  dustData,
+  yesterdayData,
+  forecastData,
+  locationName,
+  onOpenModal,
+  onCurrentLocation,
+  gpsLoading,
+}: Props) {
+  const getValue = (items: WeatherItem[], category: string) =>
+    items.find((item) => item.category === category)?.obsrValue ||
+    items.find((item) => item.category === category)?.fcstValue ||
+    "-";
 
-  const temperature = getValue("T1H");
-  const humidity = getValue("REH");
-  const pty = getValue("PTY"); // 강수형태 code
-  const sky = getValue("SKY"); // 하늘상태 code
-  const windSpeed = getValue("WSD");
+  const temperature = getValue(data, "T1H");
+  const humidity = getValue(data, "REH");
+  const pty = getValue(data, "PTY"); // 강수형태 code
+  const sky = getValue(data, "SKY"); // 하늘상태 code
+  const windSpeed = getValue(data, "WSD");
 
   // 풍향 변환
   const getWindDirection = (vecstr: string) => {
@@ -25,7 +47,7 @@ export default function WeatherNowCard({ data, dustData }: Props) {
     return directions[index];
   };
 
-  const windDirection = getWindDirection(getValue("VEC"));
+  const windDirection = getWindDirection(getValue(data, "VEC"));
 
   // 강수 상태 텍스트 변환
   const getPtyText = (code: string) => {
@@ -49,82 +71,146 @@ export default function WeatherNowCard({ data, dustData }: Props) {
     }
   };
 
+  const tempVal = parseFloat(temperature);
+  const windVal = parseFloat(windSpeed);
+  const feelsLike = calculateFeelsLike(tempVal, windVal);
+
+  // --- 어제 날씨 비교 데이터 가공 ---
+  let yesterdayUI = null;
+  if (yesterdayData) {
+    const yTemp = parseFloat(getValue(yesterdayData, "T1H"));
+    const yWind = parseFloat(getValue(yesterdayData, "WSD"));
+    if (!isNaN(yTemp) && !isNaN(yWind)) {
+      const yFeels = calculateFeelsLike(yTemp, yWind);
+      const tInfo = getTempComparisonInfo(tempVal, yTemp);
+      const fInfo = getTempComparisonInfo(feelsLike, yFeels);
+
+      const getColorClass = (type: string) => {
+        if (type === "up") return "text-red-200 font-black";
+        if (type === "down") return "text-blue-200 font-black";
+        return "text-white/90 font-bold";
+      };
+
+      yesterdayUI = (
+        <div className="flex items-center gap-2">
+          <span className="text-sm">📅</span>
+          <p className="text-[11px] leading-relaxed text-blue-50/90 font-medium">
+            어제보다 기온은{" "}
+            <span className={getColorClass(tInfo.type)}>
+              {tInfo.diff}도 {tInfo.status}
+            </span>
+            , 체감은{" "}
+            <span className={getColorClass(fInfo.type)}>
+              {fInfo.diff}도 {fInfo.suffix}
+            </span>
+          </p>
+        </div>
+      );
+    }
+  }
+
+  let tomorrowUI = null;
+  if (forecastData) {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowDate = `${tomorrow.getFullYear()}${("0" + (tomorrow.getMonth() + 1)).slice(-2)}${("0" + tomorrow.getDate()).slice(-2)}`;
+    const currentHourStr = ("0" + new Date().getHours()).slice(-2) + "00";
+
+    const tItems = forecastData.filter(
+      (item) =>
+        item.fcstDate === tomorrowDate && item.fcstTime === currentHourStr,
+    );
+    const tTemp = parseFloat(
+      tItems.find((i) => i.category === "TMP" || i.category === "T1H")
+        ?.fcstValue || "",
+    );
+    const tWind = parseFloat(
+      tItems.find((i) => i.category === "WSD")?.fcstValue || "",
+    );
+
+    if (!isNaN(tTemp) && !isNaN(tWind)) {
+      const tFeels = calculateFeelsLike(tTemp, tWind);
+      const tInfo = getTempComparisonInfo(tTemp, tempVal);
+      const fInfo = getTempComparisonInfo(tFeels, feelsLike);
+
+      const getColorClass = (type: string) => {
+        if (type === "up") return "text-red-200 font-black";
+        if (type === "down") return "text-blue-200 font-black";
+        return "text-white/90 font-bold";
+      };
+
+      tomorrowUI = (
+        <div className="flex items-center gap-2">
+          <span className="text-sm">🔮</span>
+          <p className="text-[11px] leading-relaxed text-blue-50/90 font-medium">
+            내일은 오늘보다 기온은{" "}
+            <span className={getColorClass(tInfo.type)}>
+              {tInfo.diff}도 {tInfo.status}
+            </span>
+            , 체감은{" "}
+            <span className={getColorClass(fInfo.type)}>
+              {fInfo.diff}도 {fInfo.suffix}
+            </span>
+          </p>
+        </div>
+      );
+    }
+  }
+
   // 감성 메시지
   const getMoodText = () => {
     if (pty === "1" || pty === "4" || pty === "5")
       return "토닥토닥 빗소리에 마음까지 차분해지네요 🌧️☕";
     if (pty === "2" || pty === "3" || pty === "6" || pty === "7")
       return "하얀 눈처럼 설레는 일이 생길 것 같아요 ❄️✨";
-
-    if (dustData) {
-      const pm10Grade = parseInt(dustData.pm10Grade);
-      if (pm10Grade >= 3) return "마음만은 누구보다 맑고 화창한 하루 되세요 🌿";
-    }
-
-    const tempVal = parseFloat(temperature);
+    if (dustData && parseInt(dustData.pm10Grade) >= 3)
+      return "마음만은 누구보다 맑고 화창한 하루 되세요 🌿";
     if (!isNaN(tempVal)) {
       if (tempVal >= 30) return "시원한 바람 같은 기분 좋은 소식을 기대해요 🌊";
       if (tempVal <= -5)
         return "소중한 사람들과 온기를 나누는 하루 되세요 🔥🧣";
     }
-
     if (sky === "1") return "눈부신 햇살만큼 당신의 오늘이 반짝이길 ✨🌞";
     return "포근한 구름 아래 잠시 쉬어가기 좋은 날이에요 ☁️💪";
   };
 
-  const tempVal = parseFloat(temperature);
-  const windVal = parseFloat(windSpeed);
-
-  let feelsLike = temperature;
-
-  // 체감온도 계산
-  if (!isNaN(tempVal) && !isNaN(windVal)) {
-    if (tempVal <= 10 && windVal >= 1.3) {
-      const v = windVal * 3.6;
-      const chill =
-        13.12 +
-        0.6215 * tempVal -
-        11.37 * Math.pow(v, 0.16) +
-        0.3965 * tempVal * Math.pow(v, 0.16);
-      feelsLike = chill.toFixed(1);
-    }
-  }
-
   // 미세먼지 상태 텍스트 & 색상
-  const getDustState = (grade: string) => {
-    switch (grade) {
-      case "1":
-        return { text: "좋음", color: "text-blue-200" };
-      case "2":
-        return { text: "보통", color: "text-green-200" };
-      case "3":
-        return { text: "나쁨", color: "text-yellow-200" };
-      case "4":
-        return { text: "매우나쁨", color: "text-red-200" };
-      default:
-        return { text: "-", color: "text-gray-300" };
-    }
-  };
-
-  const pm10Stat = dustData
-    ? getDustState(dustData.pm10Grade)
-    : { text: "-", color: "" };
-  const pm25Stat = dustData
-    ? getDustState(dustData.pm25Grade)
-    : { text: "-", color: "" };
+  const pm10Info = dustData ? getPm10GradeInfo(dustData.pm10Value) : null;
+  const pm25Info = dustData ? getPm25GradeInfo(dustData.pm25Value) : null;
 
   return (
-    <div className="bg-gradient-to-br from-blue-500/80 to-blue-600/80 p-6 rounded-3xl shadow-2xl backdrop-blur-sm border border-white/10 text-white w-full max-w-md mx-auto mb-6 transform transition hover:scale-[1.02]">
-      <div className="flex justify-between items-start mb-6">
-        <div>
-          <p className="text-blue-100 font-medium text-xs opacity-80 uppercase tracking-wider">
-            Current Weather
-          </p>
-          <h2 className="text-3xl font-bold mt-1">{getPtyText(pty)}</h2>
-          <p className="text-blue-100/90 text-sm mt-2 font-medium break-keep leading-relaxed">
-            {getMoodText()}
-          </p>
+    <div className="bg-gradient-to-br from-blue-500/80 to-blue-600/80 p-6 rounded-[2.5rem] shadow-2xl backdrop-blur-md border border-white/20 text-white w-full max-w-md mx-auto mb-6 transform transition hover:scale-[1.01]">
+      {/* Location Bar (Inline Style) */}
+      <div className="flex justify-between items-center mb-6 pl-1">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onCurrentLocation}
+            disabled={gpsLoading}
+            className={`bg-white/20 p-2 rounded-xl backdrop-blur-md border border-white/10 transition-all active:scale-90
+              ${gpsLoading ? "animate-pulse ring-2 ring-white/50 shadow-lg" : "hover:bg-white/30 shadow-sm"}`}
+            title="현재 위치로 설정"
+          >
+            <span
+              className={`text-xl block ${gpsLoading ? "animate-spin" : ""}`}
+            >
+              📍
+            </span>
+          </button>
+          <button
+            onClick={onOpenModal}
+            className="text-left group transition-all active:scale-95"
+          >
+            <div className="flex items-center gap-1.5">
+              <span className="text-lg font-black tracking-tight drop-shadow-sm group-hover:text-blue-100 transition-colors">
+                {locationName}
+              </span>
+              <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded-md opacity-60 group-hover:opacity-100 transition-opacity">
+                수정
+              </span>
+            </div>
+          </button>
         </div>
+
         <div className="bg-white/20 p-2 rounded-xl backdrop-blur-md shadow-inner">
           <span className="text-3xl filter drop-shadow-md">
             {pty !== "0"
@@ -138,7 +224,18 @@ export default function WeatherNowCard({ data, dustData }: Props) {
         </div>
       </div>
 
-      <div className="flex items-end gap-2 mb-6">
+      <div className="flex justify-between items-start mb-6">
+        <div>
+          <h2 className="text-3xl font-black tracking-tighter drop-shadow-sm">
+            {getPtyText(pty)}
+          </h2>
+          <p className="text-blue-50/90 text-sm mt-2 font-bold break-keep leading-relaxed text-left max-w-[240px]">
+            {getMoodText()}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-end gap-2 mb-4">
         <span className="text-6xl font-bold tracking-tighter drop-shadow-lg">
           {temperature}°
         </span>
@@ -146,6 +243,14 @@ export default function WeatherNowCard({ data, dustData }: Props) {
           체감 {feelsLike}°
         </span>
       </div>
+
+      {/* [개선] 기온 비교 메시지 영역 (색상 강조 적용) */}
+      {(yesterdayUI || tomorrowUI) && (
+        <div className="mb-6 space-y-2 p-4 rounded-2xl bg-black/10 border border-white/5 backdrop-blur-sm shadow-inner text-left">
+          {yesterdayUI}
+          {tomorrowUI}
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         {/* Humidity */}
@@ -178,8 +283,10 @@ export default function WeatherNowCard({ data, dustData }: Props) {
           </p>
           <div className="flex justify-between items-end">
             <p className="text-lg font-bold">{dustData?.pm10Value || "-"}</p>
-            <span className={`text-xs font-bold ${pm10Stat.color}`}>
-              {pm10Stat.text}
+            <span
+              className={`text-xs font-bold ${pm10Info?.grade && pm10Info.grade >= 3 ? "text-red-200" : "text-blue-100"}`}
+            >
+              {pm10Info?.label || "-"}
             </span>
           </div>
         </div>
@@ -191,8 +298,10 @@ export default function WeatherNowCard({ data, dustData }: Props) {
           </p>
           <div className="flex justify-between items-end">
             <p className="text-lg font-bold">{dustData?.pm25Value || "-"}</p>
-            <span className={`text-xs font-bold ${pm25Stat.color}`}>
-              {pm25Stat.text}
+            <span
+              className={`text-xs font-bold ${pm25Info?.grade && pm25Info.grade >= 3 ? "text-red-200" : "text-blue-100"}`}
+            >
+              {pm25Info?.label || "-"}
             </span>
           </div>
         </div>

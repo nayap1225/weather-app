@@ -65,17 +65,17 @@ export const getBackgroundTheme = (
     theme.textColor = "light";
   } else if (progress < 0.1) {
     theme.gradient =
-      "bg-gradient-to-b from-blue-300 via-pink-200 to-orange-100";
+      "bg-gradient-to-b from-blue-400 via-pink-300 to-orange-200";
     theme.textColor = "dark";
   } else if (progress < 0.4) {
-    theme.gradient = "bg-gradient-to-b from-sky-300 via-blue-100 to-white";
+    theme.gradient = "bg-gradient-to-b from-sky-400 via-blue-200 to-white";
     theme.textColor = "dark";
   } else if (progress < 0.6) {
-    theme.gradient = "bg-gradient-to-b from-sky-400 via-blue-200 to-sky-100";
+    theme.gradient = "bg-gradient-to-b from-blue-500 via-sky-300 to-blue-50";
     theme.textColor = "dark";
   } else if (progress < 0.9) {
     theme.gradient =
-      "bg-gradient-to-b from-sky-200 via-indigo-100 to-orange-50";
+      "bg-gradient-to-b from-blue-400 via-indigo-200 to-orange-100";
     theme.textColor = "dark";
   } else {
     theme.gradient =

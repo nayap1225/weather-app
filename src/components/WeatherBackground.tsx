@@ -115,11 +115,14 @@ export default function WeatherBackground({
       solarTimes.sunrise,
       solarTimes.sunset,
     );
-    const t = getBackgroundTheme(progress, weatherType, pm10Grade);
+    return getBackgroundTheme(progress, weatherType, pm10Grade);
+  }, [now, weatherType, pm10Grade, solarTimes]);
 
-    if (onThemeChange) onThemeChange(t.textColor);
-    return t;
-  }, [now, weatherType, pm10Grade, solarTimes, onThemeChange]);
+  useEffect(() => {
+    if (onThemeChange) {
+      onThemeChange(theme.textColor);
+    }
+  }, [theme.textColor, onThemeChange]);
 
   return (
     <div className="fixed inset-0 -z-50 overflow-hidden">

@@ -96,13 +96,21 @@ export const getUltraSrtNcst = async (
 
 /**
  * (초단기실황용) 가장 가까운 Base_time (정시) 구하기
+ * @param offsetDays 오늘 기준 날짜 오차 (0: 오늘, -1: 어제)
  */
-const getBaseDateTime = () => {
+export const getBaseDateTime = (offsetDays: number = 0) => {
   const now = new Date();
 
-  // 40분 이전이면 이전 시간 사용 (API 제공 딜레이 고려)
-  if (now.getMinutes() < 45) {
-    now.setHours(now.getHours() - 1);
+  if (offsetDays === -1) {
+    // [중요] 기상청 초단기실황 API는 정확히 최근 24시간 데이터만 제공함.
+    // 현재 시각이 HH시 mm분일 때 '어제 HH시'는 이미 24시간을 초과(mm분만큼)했을 가능성이 매우 높음.
+    // 안전하게 23시간 전 데이터를 조회하여 '어제 이 시간대'의 가장 가까운 실측치를 확보합니다.
+    now.setHours(now.getHours() - 23);
+  } else {
+    // 오늘 데이터는 API 업데이트 주기(보통 매시 40분 이후)를 고려하여 45분 이전엔 이전 시간 사용
+    if (now.getMinutes() < 45) {
+      now.setHours(now.getHours() - 1);
+    }
   }
 
   const year = now.getFullYear();
@@ -114,6 +122,55 @@ const getBaseDateTime = () => {
     base_date: `${year}${month}${day}`,
     base_time: `${hour}00`,
   };
+};
+
+/**
+ * 어제의 초단기 실황 데이터를 조회합니다.
+ */
+export const getYesterdayNcst = async (
+  nx: number,
+  ny: number,
+): Promise<WeatherItem[]> => {
+  try {
+    const { base_date, base_time } = getBaseDateTime(-1);
+
+    const cacheKey = generateCacheKey(
+      "weather_yesterday",
+      nx,
+      ny,
+      base_date,
+      base_time,
+    );
+    const cached = getCachedData<WeatherItem[]>(cacheKey);
+    if (cached) return cached;
+
+    const queryParams = [
+      `base_date=${base_date}`,
+      `base_time=${base_time}`,
+      `nx=${nx}`,
+      `ny=${ny}`,
+    ].join("&");
+
+    const url = `${BASE_URL}?${queryParams}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Status: ${response.status}`);
+
+    const json = (await response.json()) as WeatherResponse;
+    if (json.response?.header?.resultCode !== "00") {
+      // 로직 에러(예: 최근 1일 자료만 제공) 발생 시 빈 배열 반환하여 메인 로직 보호
+      console.warn(
+        `[API] Yesterday Alert: ${json.response?.header?.resultMsg}`,
+      );
+      return [];
+    }
+
+    const items = json.response?.body?.items?.item || [];
+    if (items.length > 0) setCachedData(cacheKey, items);
+    return items;
+  } catch (err) {
+    console.error(`[API] getYesterdayNcst failed:`, err);
+    return []; // 에러 시 빈 배열 반환 (비교 메시지만 안 나오게 처리)
+  }
 };
 
 /**
