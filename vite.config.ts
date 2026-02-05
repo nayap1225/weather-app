@@ -11,13 +11,8 @@ export default defineConfig(({ mode }) => {
   const DUST_KEY = env.VITE_DUST_API_KEY;
   const KAKAO_KEY = env.VITE_KAKAO_API_KEY;
 
-  console.log(
-    `[ViteConfig] Keys loaded: Weather(${!!WEATHER_KEY}), Dust(${!!DUST_KEY}), Kakao(${!!KAKAO_KEY})`,
-  );
-  if (KAKAO_KEY)
-    console.log(
-      `[ViteConfig] Kakao Key starts with: ${KAKAO_KEY.slice(0, 4)}...`,
-    );
+  console.log(`[ViteConfig] Keys loaded: Weather(${!!WEATHER_KEY}), Dust(${!!DUST_KEY}), Kakao(${!!KAKAO_KEY})`);
+  if (KAKAO_KEY) console.log(`[ViteConfig] Kakao Key starts with: ${KAKAO_KEY.slice(0, 4)}...`);
 
   return {
     plugins: [
@@ -62,8 +57,17 @@ export default defineConfig(({ mode }) => {
           secure: false,
           rewrite: (path) => {
             const queryString = path.split("?")[1] || "";
-            const baseApiUrl =
-              "/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst";
+            const baseApiUrl = "/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst";
+            return `${baseApiUrl}?serviceKey=${encodeURIComponent(WEATHER_KEY)}&dataType=JSON&pageNo=1&numOfRows=1000&${queryString}`;
+          },
+        },
+        "/api/ultra-srt-fcst": {
+          target: "https://apis.data.go.kr",
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => {
+            const queryString = path.split("?")[1] || "";
+            const baseApiUrl = "/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst";
             return `${baseApiUrl}?serviceKey=${encodeURIComponent(WEATHER_KEY)}&dataType=JSON&pageNo=1&numOfRows=1000&${queryString}`;
           },
         },
@@ -73,8 +77,7 @@ export default defineConfig(({ mode }) => {
           secure: false,
           rewrite: (path) => {
             const queryString = path.split("?")[1] || "";
-            const baseApiUrl =
-              "/1360000/VilageFcstInfoService_2.0/getVilageFcst";
+            const baseApiUrl = "/1360000/VilageFcstInfoService_2.0/getVilageFcst";
             return `${baseApiUrl}?serviceKey=${encodeURIComponent(WEATHER_KEY)}&dataType=JSON&pageNo=1&numOfRows=1000&${queryString}`;
           },
         },
@@ -114,8 +117,7 @@ export default defineConfig(({ mode }) => {
           secure: false,
           rewrite: (path) => {
             const queryString = path.split("?")[1] || "";
-            const baseApiUrl =
-              "/B552584/MsrstnInfoInqireSvc/getNearbyMsrstnList";
+            const baseApiUrl = "/B552584/MsrstnInfoInqireSvc/getNearbyMsrstnList";
             return `${baseApiUrl}?serviceKey=${encodeURIComponent(DUST_KEY)}&returnType=json&${queryString}`;
           },
         },
@@ -125,8 +127,7 @@ export default defineConfig(({ mode }) => {
           secure: false,
           rewrite: (path) => {
             const queryString = path.split("?")[1] || "";
-            const baseApiUrl =
-              "/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty";
+            const baseApiUrl = "/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty";
             // 경기도 전체(약 120개 이상) 및 대도시 데이터 누락 방지를 위해 1000으로 상향
             return `${baseApiUrl}?serviceKey=${encodeURIComponent(DUST_KEY)}&returnType=json&numOfRows=1000&${queryString}`;
           },
@@ -137,8 +138,7 @@ export default defineConfig(({ mode }) => {
           secure: false,
           rewrite: (path) => {
             const queryString = path.split("?")[1] || "";
-            const baseApiUrl =
-              "/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty";
+            const baseApiUrl = "/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty";
             return `${baseApiUrl}?serviceKey=${encodeURIComponent(DUST_KEY)}&returnType=json&${queryString}`;
           },
         },

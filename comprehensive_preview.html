@@ -8,8 +8,7 @@
     <style>
       @font-face {
         font-family: "Binggrae";
-        src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/Binggrae.woff")
-          format("woff");
+        src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/Binggrae.woff") format("woff");
       }
       body {
         font-family: "Binggrae", sans-serif;
@@ -88,36 +87,28 @@
         z-index: 20;
         animation: thunder-flash 0.2s ease-out;
       }
+      /* Summary Styles */
+      .card-shadow {
+        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+      }
     </style>
   </head>
   <body class="bg-slate-50 min-h-screen p-4 md:p-8">
     <div class="max-w-7xl mx-auto">
       <header class="text-center mb-12">
-        <h1 class="text-4xl font-black text-slate-800 mb-4">
-          🌪️ 환경 엔진 시뮬레이터 (Pro)
-        </h1>
-        <p class="text-slate-500">
-          바람의 방향, 세기, 번개 효과까지 결합된 최첨단 날씨 엔진을 확인하세요.
-        </p>
+        <h1 class="text-4xl font-black text-slate-800 mb-4">🌪️ 환경 엔진 시뮬레이터 (Pro)</h1>
+        <p class="text-slate-500">바람의 방향, 세기, 번개 효과까지 결합된 최첨단 날씨 엔진을 확인하세요.</p>
       </header>
 
-      <section
-        class="bg-white rounded-[2rem] shadow-2xl p-8 mb-16 border border-slate-200"
-      >
+      <section class="bg-white rounded-[2rem] shadow-2xl p-8 mb-16 border border-slate-200">
         <div class="grid grid-cols-1 xl:grid-cols-12 gap-10">
           <!-- Controls -->
           <div class="xl:col-span-4 space-y-6">
             <!-- Basic Controls -->
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label
-                  class="block text-xs font-bold text-slate-500 mb-2 uppercase"
-                  >🕒 시간대</label
-                >
-                <select
-                  id="timeSelect"
-                  class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg outline-none text-sm"
-                >
+                <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">🕒 시간대</label>
+                <select id="timeSelect" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg outline-none text-sm">
                   <option value="night">밤</option>
                   <option value="dawn">새벽</option>
                   <option value="morning">아침</option>
@@ -127,14 +118,8 @@
                 </select>
               </div>
               <div>
-                <label
-                  class="block text-xs font-bold text-slate-500 mb-2 uppercase"
-                  >☁️ 날씨</label
-                >
-                <select
-                  id="weatherSelect"
-                  class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg outline-none text-sm"
-                >
+                <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">☁️ 날씨</label>
+                <select id="weatherSelect" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg outline-none text-sm">
                   <option value="clear">맑음</option>
                   <option value="clouds">구름</option>
                   <option value="rain">비</option>
@@ -145,121 +130,57 @@
             </div>
 
             <!-- New: Scenario Presets -->
-            <div
-              class="p-4 bg-slate-800 rounded-2xl border border-slate-700 space-y-3 shadow-lg"
-            >
-              <h3
-                class="text-sm font-bold text-slate-100 flex items-center gap-2"
-              >
-                <span>🎬</span> 시나리오 프리셋 (Presets)
-              </h3>
+            <div class="p-4 bg-slate-800 rounded-2xl border border-slate-700 space-y-3 shadow-lg">
+              <h3 class="text-sm font-bold text-slate-100 flex items-center gap-2"><span>🎬</span> 시나리오 프리셋 (Presets)</h3>
               <div class="grid grid-cols-2 gap-2">
-                <button
-                  onclick="applyPreset('dustStorm')"
-                  class="p-2 text-[11px] font-bold bg-slate-700 hover:bg-slate-600 text-amber-400 rounded-xl transition-all border border-amber-900/30"
-                >
+                <button onclick="applyPreset('dustStorm')" class="p-2 text-[11px] font-bold bg-slate-700 hover:bg-slate-600 text-amber-400 rounded-xl transition-all border border-amber-900/30">
                   🌪️ 황사/매우나쁨
                 </button>
-                <button
-                  onclick="applyPreset('heatwave')"
-                  class="p-2 text-[11px] font-bold bg-slate-700 hover:bg-slate-600 text-red-400 rounded-xl transition-all border border-red-900/30"
-                >
+                <button onclick="applyPreset('heatwave')" class="p-2 text-[11px] font-bold bg-slate-700 hover:bg-slate-600 text-red-400 rounded-xl transition-all border border-red-900/30">
                   🔥 내일 폭염
                 </button>
-                <button
-                  onclick="applyPreset('coldSnap')"
-                  class="p-2 text-[11px] font-bold bg-slate-700 hover:bg-slate-600 text-blue-400 rounded-xl transition-all border border-blue-900/30"
-                >
+                <button onclick="applyPreset('coldSnap')" class="p-2 text-[11px] font-bold bg-slate-700 hover:bg-slate-600 text-blue-400 rounded-xl transition-all border border-blue-900/30">
                   🥶 어제보다 추움
                 </button>
-                <button
-                  onclick="applyPreset('perfectDay')"
-                  class="p-2 text-[11px] font-bold bg-slate-700 hover:bg-slate-600 text-green-400 rounded-xl transition-all border border-green-900/30"
-                >
+                <button onclick="applyPreset('perfectDay')" class="p-2 text-[11px] font-bold bg-slate-700 hover:bg-slate-600 text-green-400 rounded-xl transition-all border border-green-900/30">
                   🌿 쾌적한 날씨
                 </button>
               </div>
             </div>
 
             <!-- Wind Controls -->
-            <div
-              class="p-4 bg-blue-50 rounded-2xl border border-blue-100 space-y-4"
-            >
-              <h3
-                class="text-sm font-bold text-blue-800 flex items-center gap-2"
-              >
-                <span>🌪️</span> 바람 설정 (Wind)
-              </h3>
+            <div class="p-4 bg-blue-50 rounded-2xl border border-blue-100 space-y-4">
+              <h3 class="text-sm font-bold text-blue-800 flex items-center gap-2"><span>🌪️</span> 바람 설정 (Wind)</h3>
               <div>
                 <div class="flex justify-between text-xs mb-2">
                   <span class="text-blue-700">풍속 (WSD)</span>
                   <span id="wsdVal" class="font-bold text-blue-900">0 m/s</span>
                 </div>
-                <input
-                  type="range"
-                  id="wsdRange"
-                  min="0"
-                  max="20"
-                  step="0.5"
-                  value="0"
-                  class="w-full h-1.5 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                />
+                <input type="range" id="wsdRange" min="0" max="20" step="0.5" value="0" class="w-full h-1.5 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-600" />
               </div>
               <div>
                 <div class="flex justify-between text-xs mb-2">
                   <span class="text-blue-700">풍향 (VEC)</span>
-                  <span id="vecVal" class="font-bold text-blue-900"
-                    >북풍 (180°)</span
-                  >
+                  <span id="vecVal" class="font-bold text-blue-900">북풍 (180°)</span>
                 </div>
-                <input
-                  type="range"
-                  id="vecRange"
-                  min="0"
-                  max="360"
-                  step="10"
-                  value="180"
-                  class="w-full h-1.5 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                />
+                <input type="range" id="vecRange" min="0" max="360" step="10" value="180" class="w-full h-1.5 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-600" />
               </div>
             </div>
 
             <!-- Intensity & Thunder -->
-            <div
-              class="p-4 bg-purple-50 rounded-2xl border border-purple-100 space-y-4"
-            >
-              <h3
-                class="text-sm font-bold text-purple-800 flex items-center gap-2"
-              >
-                <span>⚡</span> 특수 효과 (Intensity & Thunder)
-              </h3>
+            <div class="p-4 bg-purple-50 rounded-2xl border border-purple-100 space-y-4">
+              <h3 class="text-sm font-bold text-purple-800 flex items-center gap-2"><span>⚡</span> 특수 효과 (Intensity & Thunder)</h3>
               <div>
                 <div class="flex justify-between text-xs mb-2">
                   <span class="text-purple-700">강수 강도 (RN1)</span>
-                  <span id="rn1Val" class="font-bold text-purple-900"
-                    >0 mm</span
-                  >
+                  <span id="rn1Val" class="font-bold text-purple-900">0 mm</span>
                 </div>
-                <input
-                  type="range"
-                  id="rn1Range"
-                  min="0"
-                  max="50"
-                  step="1"
-                  value="0"
-                  class="w-full h-1.5 bg-purple-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
-                />
+                <input type="range" id="rn1Range" min="0" max="50" step="1" value="0" class="w-full h-1.5 bg-purple-200 rounded-lg appearance-none cursor-pointer accent-purple-600" />
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-purple-700"
-                  >천둥번개 활성화</span
-                >
+                <span class="text-xs font-bold text-purple-700">천둥번개 활성화</span>
                 <label class="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    id="thunderToggle"
-                    class="sr-only peer"
-                  />
+                  <input type="checkbox" id="thunderToggle" class="sr-only peer" />
                   <div
                     class="w-11 h-6 bg-purple-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"
                   ></div>
@@ -268,144 +189,74 @@
             </div>
 
             <!-- Dust -->
-            <div
-              class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-4"
-            >
-              <h3
-                class="text-sm font-bold text-slate-700 flex items-center gap-2"
-              >
-                <span>😷</span> 미세먼지 설정 (Dust)
-              </h3>
+            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-4">
+              <h3 class="text-sm font-bold text-slate-700 flex items-center gap-2"><span>😷</span> 미세먼지 설정 (Dust)</h3>
 
               <div class="space-y-3">
-                <div>
+                <div id="pm10Box" class="p-2 rounded-xl transition-colors">
                   <div class="flex justify-between text-xs mb-1">
                     <span class="text-slate-500 font-bold">PM10 (일반)</span>
-                    <span id="pm10GradeLabel" class="font-bold text-blue-600"
-                      >좋음</span
-                    >
+                    <span id="pm10GradeLabel" class="font-bold text-blue-600">좋음</span>
                   </div>
-                  <input
-                    type="range"
-                    id="pm10Range"
-                    min="1"
-                    max="4"
-                    value="1"
-                    class="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-600"
-                  />
+                  <input type="range" id="pm10Range" min="1" max="4" value="1" class="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-600" />
                 </div>
 
-                <div class="pt-1 border-t border-slate-200/50">
+                <div id="pm25Box" class="pt-1 border-t border-slate-200/50 p-2 rounded-xl transition-colors">
                   <div class="flex justify-between text-xs mb-1">
                     <span class="text-slate-500 font-bold">PM2.5 (초미세)</span>
-                    <span id="pm25GradeLabel" class="font-bold text-blue-600"
-                      >좋음</span
-                    >
+                    <span id="pm25GradeLabel" class="font-bold text-blue-600">좋음</span>
                   </div>
-                  <input
-                    type="range"
-                    id="pm25Range"
-                    min="1"
-                    max="4"
-                    value="1"
-                    class="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-600"
-                  />
+                  <input type="range" id="pm25Range" min="1" max="4" value="1" class="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-600" />
                 </div>
               </div>
             </div>
 
             <!-- Temp Comparison Controls -->
-            <div
-              class="p-4 bg-orange-50 rounded-2xl border border-orange-100 space-y-4"
-            >
-              <h3
-                class="text-sm font-bold text-orange-800 flex items-center gap-2"
-              >
-                <span>🌡️</span> 기온 비교 설정 (Comparison)
-              </h3>
+            <div class="p-4 bg-orange-50 rounded-2xl border border-orange-100 space-y-4">
+              <h3 class="text-sm font-bold text-orange-800 flex items-center gap-2"><span>🌡️</span> 기온 비교 설정 (Comparison)</h3>
 
               <!-- Yesterday -->
               <div>
                 <div class="flex justify-between text-xs mb-2">
-                  <span class="text-orange-700">어제 대비 기온 차</span>
-                  <span id="yTempDiffVal" class="font-bold text-orange-900"
-                    >0°C</span
-                  >
+                  <span class="text-orange-700">어제 기온 차</span>
+                  <span id="yTempDiffVal" class="font-bold text-orange-900">0°C</span>
                 </div>
-                <input
-                  type="range"
-                  id="yTempDiffRange"
-                  min="-10"
-                  max="10"
-                  step="0.5"
-                  value="0"
-                  class="w-full h-1.5 bg-orange-200 rounded-lg appearance-none cursor-pointer accent-orange-600"
-                />
+                <input type="range" id="yTempDiffRange" min="-10" max="10" step="0.5" value="0" class="w-full h-1.5 bg-orange-200 rounded-lg appearance-none cursor-pointer accent-orange-600 mb-2" />
+
+                <div class="flex justify-between text-xs mb-2">
+                  <span class="text-orange-700">어제 체감 차</span>
+                  <span id="yFeelsDiffVal" class="font-bold text-orange-900">0°C</span>
+                </div>
+                <input type="range" id="yFeelsDiffRange" min="-10" max="10" step="0.5" value="0" class="w-full h-1.5 bg-orange-200 rounded-lg appearance-none cursor-pointer accent-orange-600" />
               </div>
 
               <!-- Tomorrow -->
               <div>
                 <div class="flex justify-between text-xs mb-2">
-                  <span class="text-orange-700">오늘 대비 내일 기온 차</span>
-                  <span id="tTempDiffVal" class="font-bold text-orange-900"
-                    >0°C</span
-                  >
+                  <span class="text-orange-700">내일 기온 차</span>
+                  <span id="tTempDiffVal" class="font-bold text-orange-900">0°C</span>
                 </div>
-                <input
-                  type="range"
-                  id="tTempDiffRange"
-                  min="-10"
-                  max="10"
-                  step="0.5"
-                  value="0"
-                  class="w-full h-1.5 bg-orange-200 rounded-lg appearance-none cursor-pointer accent-orange-600"
-                />
+                <input type="range" id="tTempDiffRange" min="-10" max="10" step="0.5" value="0" class="w-full h-1.5 bg-orange-200 rounded-lg appearance-none cursor-pointer accent-orange-600 mb-2" />
+
+                <div class="flex justify-between text-xs mb-2">
+                  <span class="text-orange-700">내일 체감 차</span>
+                  <span id="tFeelsDiffVal" class="font-bold text-orange-900">0°C</span>
+                </div>
+                <input type="range" id="tFeelsDiffRange" min="-10" max="10" step="0.5" value="0" class="w-full h-1.5 bg-orange-200 rounded-lg appearance-none cursor-pointer accent-orange-600" />
               </div>
             </div>
 
             <!-- Text Color Controller -->
             <div class="pt-4 border-t border-slate-100">
-              <label
-                class="block text-xs font-bold text-slate-500 mb-2 uppercase"
-                >🔠 텍스트 컬러 (강제 설정)</label
-              >
+              <label class="block text-xs font-bold text-slate-500 mb-2 uppercase">🔠 텍스트 컬러 (강제 설정)</label>
               <div class="flex gap-2">
-                <button
-                  onclick="setTextColor('auto')"
-                  class="text-btn flex-1 p-2 text-xs rounded-lg border border-blue-600 bg-blue-600 text-white"
-                  data-color="auto"
-                >
-                  자동 (Auto)
-                </button>
-                <button
-                  onclick="setTextColor('white')"
-                  class="text-btn flex-1 p-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700"
-                  data-color="white"
-                >
-                  화이트
-                </button>
-                <button
-                  onclick="setTextColor('dark')"
-                  class="text-btn flex-1 p-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700"
-                  data-color="dark"
-                >
-                  다크
-                </button>
+                <button onclick="setTextColor('auto')" class="text-btn flex-1 p-2 text-xs rounded-lg border border-blue-600 bg-blue-600 text-white" data-color="auto">자동 (Auto)</button>
+                <button onclick="setTextColor('white')" class="text-btn flex-1 p-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700" data-color="white">화이트</button>
+                <button onclick="setTextColor('dark')" class="text-btn flex-1 p-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-700" data-color="dark">다크</button>
               </div>
               <div class="mt-2 flex items-center gap-2">
-                <input
-                  type="color"
-                  id="customColor"
-                  oninput="setTextColor('custom')"
-                  class="w-8 h-8 rounded border border-slate-200 cursor-pointer"
-                />
-                <input
-                  type="text"
-                  id="customHex"
-                  placeholder="#FFFFFF"
-                  oninput="handleHexInput(this.value)"
-                  class="flex-1 p-2 text-xs rounded-lg border border-slate-200 bg-white outline-none"
-                />
+                <input type="color" id="customColor" oninput="setTextColor('custom')" class="w-8 h-8 rounded border border-slate-200 cursor-pointer" />
+                <input type="text" id="customHex" placeholder="#FFFFFF" oninput="handleHexInput(this.value)" class="flex-1 p-2 text-xs rounded-lg border border-slate-200 bg-white outline-none" />
               </div>
             </div>
           </div>
@@ -416,174 +267,94 @@
               id="simPreview"
               class="relative group aspect-[16/9] xl:h-[600px] rounded-[2rem] overflow-hidden shadow-2xl flex flex-col items-center justify-center transition-all duration-1000 bg-slate-900"
             >
-              <div
-                id="simBase"
-                class="absolute inset-0 transition-all duration-1000"
-              ></div>
-              <div
-                id="simHaze"
-                class="absolute inset-0 pointer-events-none transition-all duration-1000"
-              ></div>
-              <div
-                id="simOverlay"
-                class="absolute inset-0 transition-all duration-1000"
-              ></div>
-              <div
-                id="simThunder"
-                class="absolute inset-0 pointer-events-none z-20"
-              ></div>
-              <div
-                id="simParticles"
-                class="absolute inset-0 pointer-events-none overflow-hidden"
-              ></div>
+              <div id="simBase" class="absolute inset-0 transition-all duration-1000"></div>
+              <div id="simHaze" class="absolute inset-0 pointer-events-none transition-all duration-1000"></div>
+              <div id="simOverlay" class="absolute inset-0 transition-all duration-1000"></div>
+              <div id="simThunder" class="absolute inset-0 pointer-events-none z-20"></div>
+              <div id="simParticles" class="absolute inset-0 pointer-events-none overflow-hidden"></div>
 
               <!-- Mascot -->
-              <div
-                id="mascot"
-                class="relative z-10 w-32 h-32 animate-[float_4s_ease-in-out_infinite] transition-transform duration-500"
-              >
-                <img
-                  src="/gurumi_192x192.png"
-                  class="w-full h-full object-contain filter drop-shadow-2xl"
-                  alt="Mascot"
-                />
+              <div id="mascot" class="relative z-10 w-32 h-32 animate-[float_4s_ease-in-out_infinite] transition-transform duration-500">
+                <img src="/gurumi_192x192.png" class="w-full h-full object-contain filter drop-shadow-2xl" alt="Mascot" />
               </div>
 
               <!-- Preview Mockup Container -->
-              <div
-                id="previewMockup"
-                class="w-full max-w-sm mx-auto p-8 rounded-3xl backdrop-blur-md bg-white/10 border border-white/20 z-10 mt-6 shadow-2xl transition-all duration-500"
-              >
+              <div id="previewMockup" class="w-full max-w-sm mx-auto p-8 rounded-3xl backdrop-blur-md bg-white/10 border border-white/20 z-10 mt-6 shadow-2xl transition-all duration-500">
                 <!-- WeatherNowCard Mockup Area -->
-                <div
-                  id="nowCardMockup"
-                  class="w-full text-left bg-transparent mb-8"
-                >
+                <div id="nowCardMockup" class="w-full text-left bg-transparent mb-6">
                   <div class="mb-4">
-                    <p
-                      id="moodText"
-                      class="text-lg font-bold leading-relaxed opacity-90 break-keep"
-                    >
-                      포근한 구름 아래 잠시 쉬어가기 좋은 날이에요 ☁️💪
-                    </p>
+                    <p id="moodText" class="text-lg font-bold leading-relaxed opacity-90 break-keep">포근한 구름 아래 잠시 쉬어가기 좋은 날이에요 ☁️💪</p>
                   </div>
                   <div class="flex items-end gap-2">
-                    <h2
-                      id="sampleTemp"
-                      class="text-6xl font-black tracking-tighter drop-shadow-lg"
-                    >
-                      24.5°
+                    <h2 id="sampleTemp" class="text-6xl font-black tracking-tighter drop-shadow-lg flex items-center">
+                      24.5° <span id="sampleIcon" class="text-4xl ml-2 filter drop-shadow-md">☀️</span>
                     </h2>
-                    <span
-                      id="sampleFeelsLike"
-                      class="text-xl text-blue-100 mb-2 font-medium opacity-90"
-                      >체감 26°</span
-                    >
+                    <span id="sampleFeelsLike" class="text-xl text-blue-100 mb-2 font-medium opacity-90">체감 26°</span>
+                  </div>
+                </div>
+
+                <!-- Items Area -->
+                <div id="itemArea" class="w-full mb-6 space-y-2">
+                  <div id="noItem" class="text-xs text-white/50 text-center py-2 border border-white/10 rounded-xl">준비물 없음</div>
+                  <div id="maskItem" class="hidden p-3 bg-white/20 rounded-xl flex items-center gap-3 backdrop-blur-md border border-white/20">
+                    <span class="text-2xl">😷</span>
+                    <div>
+                      <div class="text-[10px] font-bold text-white/80 uppercase">미세먼지</div>
+                      <div id="maskReason" class="text-xs font-bold text-white">농도 나쁨</div>
+                    </div>
                   </div>
                 </div>
 
                 <!-- Comparison Messages -->
-                <div
-                  id="comparisonArea"
-                  class="w-full space-y-2 p-4 rounded-2xl bg-black/10 border border-white/5 backdrop-blur-sm shadow-inner text-left mb-6"
-                >
+                <div id="comparisonArea" class="w-full space-y-2 p-4 rounded-2xl bg-black/10 border border-white/5 backdrop-blur-sm shadow-inner text-left mb-6">
                   <div id="yMsgRow" class="flex items-center gap-2">
                     <span class="text-xs">📅</span>
-                    <p id="yMsg" class="text-[11px] font-bold opacity-90">
-                      어제보다 기온은 같고, 체감온도는 같아요
-                    </p>
+                    <p id="yMsg" class="text-[11px] font-bold opacity-90">어제보다 기온은 같고, 체감온도는 같아요</p>
                   </div>
                   <div id="tMsgRow" class="flex items-center gap-2">
                     <span class="text-xs">🔮</span>
-                    <p id="tMsg" class="text-[11px] font-bold opacity-90">
-                      내일은 오늘보다 기온은 같고, 체감온도는 같아요
-                    </p>
+                    <p id="tMsg" class="text-[11px] font-bold opacity-90">내일은 오늘보다 기온은 같고, 체감온도는 같아요</p>
                   </div>
                 </div>
 
                 <!-- WeatherDetailCard Mockup Area -->
-                <div
-                  id="detailCard"
-                  class="w-full grid grid-cols-2 gap-3 transition-all duration-500"
-                >
-                  <div
-                    class="bg-white/10 p-4 rounded-2xl border border-white/5 flex flex-col gap-1 shadow-sm"
-                  >
+                <div id="detailCard" class="w-full grid grid-cols-2 gap-3 transition-all duration-500">
+                  <div class="bg-white/10 p-4 rounded-2xl border border-white/5 flex flex-col gap-1 shadow-sm">
                     <div class="flex items-center gap-2 mb-1">
                       <span class="text-blue-200/80">💧</span>
-                      <span
-                        class="text-[11px] font-bold text-blue-100/60 uppercase"
-                        >습도</span
-                      >
+                      <span class="text-[11px] font-bold text-blue-100/60 uppercase">습도</span>
                     </div>
-                    <span
-                      id="detailHumidity"
-                      class="text-lg font-black text-white"
-                      >45%</span
-                    >
+                    <span id="detailHumidity" class="text-lg font-black text-white">45%</span>
                   </div>
-                  <div
-                    class="bg-white/10 p-4 rounded-2xl border border-white/5 flex flex-col gap-1 shadow-sm"
-                  >
+                  <div class="bg-white/10 p-4 rounded-2xl border border-white/5 flex flex-col gap-1 shadow-sm">
                     <div class="flex items-center gap-2 mb-1">
                       <span class="text-blue-200/80">☔</span>
-                      <span
-                        class="text-[11px] font-bold text-blue-100/60 uppercase"
-                        >강수확률</span
-                      >
+                      <span class="text-[11px] font-bold text-blue-100/60 uppercase">강수확률</span>
                     </div>
-                    <span id="detailPop" class="text-lg font-black text-white"
-                      >0%</span
-                    >
+                    <span id="detailPop" class="text-lg font-black text-white">0%</span>
                   </div>
-                  <div
-                    class="bg-white/10 p-4 rounded-2xl border border-white/5 flex flex-col gap-1 shadow-sm"
-                  >
+                  <div class="bg-white/10 p-4 rounded-2xl border border-white/5 flex flex-col gap-1 shadow-sm">
                     <div class="flex items-center gap-2 mb-1">
                       <span class="text-blue-200/80">☀️</span>
-                      <span
-                        class="text-[11px] font-bold text-blue-100/60 uppercase"
-                        >자외선</span
-                      >
+                      <span class="text-[11px] font-bold text-blue-100/60 uppercase">자외선</span>
                     </div>
-                    <span
-                      id="detailUV"
-                      class="text-lg font-black text-green-300"
-                      >낮음</span
-                    >
+                    <span id="detailUV" class="text-lg font-black text-green-300">낮음</span>
                   </div>
-                  <div
-                    class="bg-white/10 p-4 rounded-2xl border border-white/5 flex flex-col gap-1 shadow-sm"
-                  >
+                  <div class="bg-white/10 p-4 rounded-2xl border border-white/5 flex flex-col gap-1 shadow-sm">
                     <div class="flex items-center gap-2 mb-1">
                       <span class="text-blue-200/80">🌬️</span>
-                      <span
-                        class="text-[11px] font-bold text-blue-100/60 uppercase"
-                        >풍속</span
-                      >
+                      <span class="text-[11px] font-bold text-blue-100/60 uppercase">풍속</span>
                     </div>
                     <div class="flex items-baseline gap-1">
-                      <span
-                        id="detailWind"
-                        class="text-lg font-black text-white"
-                        >0m/s</span
-                      >
-                      <span
-                        id="detailWindDir"
-                        class="text-[10px] text-blue-100/40"
-                        >북풍</span
-                      >
+                      <span id="detailWind" class="text-lg font-black text-white">0m/s</span>
+                      <span id="detailWindDir" class="text-[10px] text-blue-100/40">북풍</span>
                     </div>
                   </div>
                 </div>
               </div>
 
               <!-- Status Badge -->
-              <div
-                class="absolute top-6 left-6 bg-black/40 backdrop-blur-md px-4 py-2 rounded-xl text-white text-[10px] font-bold uppercase tracking-widest"
-              >
-                Live Environment Engine v3.0
-              </div>
+              <div class="absolute top-6 left-6 bg-black/40 backdrop-blur-md px-4 py-2 rounded-xl text-white text-[10px] font-bold uppercase tracking-widest">Live Environment Engine v3.0</div>
             </div>
           </div>
         </div>
@@ -594,28 +365,60 @@
         <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
           <div class="text-2xl mb-3">🌬️</div>
           <h4 class="font-bold text-slate-800 mb-2">Wind Physics</h4>
-          <p class="text-xs text-slate-500 leading-relaxed">
-            풍속에 따라 입자의 속도가 동적으로 변하며, 풍향(VEC)에 맞춰 입자가
-            기울어지는 skewX 효과가 적용됩니다.
-          </p>
+          <p class="text-xs text-slate-500 leading-relaxed">풍속에 따라 입자의 속도가 동적으로 변하며, 풍향(VEC)에 맞춰 입자가 기울어지는 skewX 효과가 적용됩니다.</p>
         </div>
         <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
           <div class="text-2xl mb-3">⚡</div>
           <h4 class="font-bold text-slate-800 mb-2">Thunder Logic</h4>
-          <p class="text-xs text-slate-500 leading-relaxed">
-            번개 활성 시 불규칙한 간격으로 화면이 번쩍이는 플래시 레이어가
-            작동하여 폭우 상황의 긴장감을 더합니다.
-          </p>
+          <p class="text-xs text-slate-500 leading-relaxed">번개 활성 시 불규칙한 간격으로 화면이 번쩍이는 플래시 레이어가 작동하여 폭우 상황의 긴장감을 더합니다.</p>
         </div>
         <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
           <div class="text-2xl mb-3">🌊</div>
           <h4 class="font-bold text-slate-800 mb-2">Precipitation Scaling</h4>
-          <p class="text-xs text-slate-500 leading-relaxed">
-            강수량(RN1) 데이터에 따라 화면에 뿌려지는 입자의 밀도를 최적화하여
-            보슬비부터 폭우까지 자연스럽게 표현합니다.
-          </p>
+          <p class="text-xs text-slate-500 leading-relaxed">강수량(RN1) 데이터에 따라 화면에 뿌려지는 입자의 밀도를 최적화하여 보슬비부터 폭우까지 자연스럽게 표현합니다.</p>
         </div>
       </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- NEW SECTION: Options Summary -->
+    <!-- ============================================== -->
+    <div id="summary-section" class="mt-24 pt-12 border-t-4 border-slate-200">
+      <header class="mb-12 text-center">
+        <h1 class="text-3xl md:text-4xl font-black mb-3 text-slate-900">🌦️ 종합 로직 프리뷰 (Options Summary)</h1>
+        <p class="text-slate-500">정의된 모든 옷차림(Outfit) 및 준비물(Item) 케이스를 한눈에 확인하세요.</p>
+      </header>
+
+      <!-- 1. Outfit Cases -->
+      <section class="mb-16">
+        <div class="flex items-center gap-3 mb-6 border-b border-slate-200 pb-4">
+          <span class="text-2xl">👕</span>
+          <h2 class="text-2xl font-bold">1. 옷차림 추천 (Outfit Cases)</h2>
+          <span class="text-xs font-medium px-2 py-1 bg-slate-100 rounded-full text-slate-500">우선순위: 특수 > 보정 > 기온</span>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-12" id="previewOutfitContainer"></div>
+      </section>
+
+      <!-- 2. Item Cases -->
+      <section class="mb-16">
+        <div class="flex items-center gap-3 mb-6 border-b border-slate-200 pb-4">
+          <span class="text-2xl">🎒</span>
+          <h2 class="text-2xl font-bold">2. 준비물 (Preparation Items)</h2>
+          <span class="text-xs font-medium px-2 py-1 bg-slate-100 rounded-full text-slate-500">필수(MUST) vs 옵션(OPTION)</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="previewItemContainer"></div>
+      </section>
+
+      <!-- 3. Mood Cases -->
+      <section class="mb-20">
+        <div class="flex items-center gap-3 mb-6 border-b border-slate-200 pb-4">
+          <span class="text-2xl">💬</span>
+          <h2 class="text-2xl font-bold">3. 감성 문구 (Mood Messages)</h2>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-slate-100 card-shadow">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm" id="previewMoodContainer"></div>
+        </div>
+      </section>
     </div>
 
     <script>
@@ -629,31 +432,11 @@
       };
 
       const moodMessages = {
-        clear: [
-          "눈부신 햇살만큼 당신의 오늘이 반짝이길 ✨🌞",
-          "하늘까지 응원해주는 하루예요 🌈",
-          "괜히 기분 좋아지는 하늘이에요 ☀️",
-        ],
-        rain: [
-          "토닥토닥 빗소리에 마음까지 차분해지네요 🌧️☕",
-          "우산 속 작은 쉼표 같은 하루예요 ☂️",
-          "살짝 느려져도 괜찮은, 비 오는 하루예요 🌦️",
-        ],
-        snow: [
-          "하얀 눈처럼 설레는 일이 생길 것 같아요 ❄️✨",
-          "세상이 조용해지는 눈 오는 날의 마법 ⛄",
-          "발자국 소리마저 부드러운 하루예요 ❄️",
-        ],
-        dust: [
-          "마음만은 누구보다 맑고 화창한 하루 되세요 🌿",
-          "오늘은 밖보다 나를 먼저 챙기는 날이에요 😷",
-          "천천히 숨 쉬고, 무리하지 마세요 🍃",
-        ],
-        default: [
-          "포근한 구름 아래 잠시 쉬어가기 좋은 날이에요 ☁️💪",
-          "천천히 가도 괜찮은 하루예요 🌫️",
-          "괜히 멍하니 하늘 보게 되는 날이에요 ☁️",
-        ],
+        clear: ["눈부신 햇살만큼 당신의 오늘이 반짝이길 ✨🌞", "하늘까지 응원해주는 하루예요 🌈", "괜히 기분 좋아지는 하늘이에요 ☀️"],
+        rain: ["토닥토닥 빗소리에 마음까지 차분해지네요 🌧️☕", "우산 속 작은 쉼표 같은 하루예요 ☂️", "살짝 느려져도 괜찮은, 비 오는 하루예요 🌦️"],
+        snow: ["하얀 눈처럼 설레는 일이 생길 것 같아요 ❄️✨", "세상이 조용해지는 눈 오는 날의 마법 ⛄", "발자국 소리마저 부드러운 하루예요 ❄️"],
+        dust: ["마음만은 누구보다 맑고 화창한 하루 되세요 🌿", "오늘은 밖보다 나를 먼저 챙기는 날이에요 😷", "천천히 숨 쉬고, 무리하지 마세요 🍃"],
+        default: ["포근한 구름 아래 잠시 쉬어가기 좋은 날이에요 ☁️💪", "천천히 가도 괜찮은 하루예요 🌫️", "괜히 멍하니 하늘 보게 되는 날이에요 ☁️"],
       };
 
       const weatherOverlays = {
@@ -693,12 +476,7 @@
         const absDiff = Math.abs(val);
         const status = val > 0 ? "높고" : val < 0 ? "낮고" : "같고";
         const suffix = val === 0 ? "같아요" : val > 0 ? "높아요" : "낮아요";
-        const colorClass =
-          val > 0
-            ? "text-red-300 font-black"
-            : val < 0
-              ? "text-blue-300 font-black"
-              : "text-white/90 font-bold";
+        const colorClass = val > 0 ? "text-red-300 font-black" : val < 0 ? "text-blue-300 font-black" : "text-white/90 font-bold";
 
         return { diff: absDiff, status, suffix, colorClass };
       }
@@ -740,12 +518,11 @@
           `내일은 오늘보다 기온은 <span class="${tT.colorClass}">${tT.diff}도 ${tT.status}</span>, 체감은 <span class="${tF.colorClass}">${tF.diff}도 ${tF.suffix}</span>`;
 
         // Sample App Dust Summary
-        document.getElementById("pm10Label").textContent = d10.label;
-        document.getElementById("pm10Box").className =
-          `p-3 rounded-xl border border-white/10 ${d10.bg}`;
-        document.getElementById("pm25Label").textContent = d25.label;
-        document.getElementById("pm25Box").className =
-          `p-3 rounded-xl border border-white/10 ${d25.bg}`;
+        // Sample App Dust Summary
+        document.getElementById("pm10GradeLabel").textContent = d10.label;
+        document.getElementById("pm10Box").className = `p-3 rounded-xl border border-white/10 ${d10.bg}`;
+        document.getElementById("pm25GradeLabel").textContent = d25.label;
+        document.getElementById("pm25Box").className = `p-3 rounded-xl border border-white/10 ${d25.bg}`;
 
         // Update Sample Items (Logic Ported from App)
         const maskItem = document.getElementById("maskItem");
@@ -763,10 +540,7 @@
         if (currentSettings.pm10 >= 3 || currentSettings.pm25 >= 3) {
           maskItem.classList.remove("hidden");
           hasRequired = true;
-          maskReason.textContent =
-            currentSettings.pm25 >= 3
-              ? "초미세먼지 농도가 높아요"
-              : "미세먼지 농도가 높아요";
+          maskReason.textContent = currentSettings.pm25 >= 3 ? "초미세먼지 농도가 높아요" : "미세먼지 농도가 높아요";
         } else {
           maskItem.classList.add("hidden");
         }
@@ -775,8 +549,7 @@
         if (currentSettings.weather === "rain" || currentSettings.rn1 > 0) {
           hasRequired = true;
           const umbrella = document.createElement("div");
-          umbrella.className =
-            "extra-item p-4 rounded-xl bg-white border-2 border-blue-200 shadow-sm flex flex-col items-start gap-1 mt-2";
+          umbrella.className = "extra-item p-4 rounded-xl bg-white border-2 border-blue-200 shadow-sm flex flex-col items-start gap-1 mt-2";
           umbrella.innerHTML = `
             <div class="flex justify-between w-full">
               <span class="text-2xl">☔</span>
@@ -792,8 +565,7 @@
         if (currentSettings.weather === "snow") {
           hasRequired = true;
           const snowGear = document.createElement("div");
-          snowGear.className =
-            "extra-item p-4 rounded-xl bg-white border-2 border-slate-200 shadow-sm flex flex-col items-start gap-1 mt-2";
+          snowGear.className = "extra-item p-4 rounded-xl bg-white border-2 border-slate-200 shadow-sm flex flex-col items-start gap-1 mt-2";
           snowGear.innerHTML = `
             <div class="flex justify-between w-full">
               <span class="text-2xl">🌨️</span>
@@ -818,18 +590,14 @@
           snow: "❄️",
           fog: "🌫️",
         };
-        document.getElementById("sampleIcon").textContent =
-          weatherIcons[currentSettings.weather];
+        document.getElementById("sampleIcon").textContent = weatherIcons[currentSettings.weather];
 
         // 1. Time Base
-        base.className =
-          "absolute inset-0 transition-all duration-1000 " +
-          themes[currentSettings.time];
+        base.className = "absolute inset-0 transition-all duration-1000 " + themes[currentSettings.time];
 
         // 2. Weather & Dust Visuals
         let w = weatherOverlays[currentSettings.weather];
-        overlay.className =
-          "absolute inset-0 transition-all duration-1000 " + w.color;
+        overlay.className = "absolute inset-0 transition-all duration-1000 " + w.color;
         overlay.style.opacity = w.opacity;
 
         let hazeOpacity = w.haze || 0;
@@ -839,12 +607,9 @@
         if (maxDust >= 3) {
           const intensity = maxDust === 4 ? 1 : 0.6;
           hazeOpacity = Math.max(hazeOpacity, intensity * 0.45);
-          filterString =
-            (filterString !== "none" ? filterString + " " : "") +
-            `sepia(${intensity * 0.6}) contrast(0.9) blur(${intensity * 2}px)`;
+          filterString = (filterString !== "none" ? filterString + " " : "") + `sepia(${intensity * 0.6}) contrast(0.9) blur(${intensity * 2}px)`;
           if (maxDust >= 4) {
-            overlay.className =
-              "absolute inset-0 transition-all duration-1000 bg-yellow-900";
+            overlay.className = "absolute inset-0 transition-all duration-1000 bg-yellow-900";
             overlay.style.opacity = Math.max(w.opacity, 0.25);
           }
         }
@@ -853,40 +618,30 @@
         haze.style.webkitBackdropFilter = filterString;
 
         // 4. Update Detailed Mockup
-        const directionsList = [
-          "북",
-          "북동",
-          "동",
-          "남동",
-          "남",
-          "남서",
-          "서",
-          "북서",
-        ];
+        const directionsList = ["북", "북동", "동", "남동", "남", "남서", "서", "북서"];
         const windIdx = Math.floor(((currentSettings.vec + 22.5) % 360) / 45);
-        document.getElementById("detailHumidity").textContent =
-          (40 + Math.random() * 20).toFixed(0) + "%";
-        document.getElementById("detailWind").textContent =
-          currentSettings.wsd + "m/s";
-        document.getElementById("detailWindDir").textContent =
-          directionsList[windIdx] + "풍";
-        document.getElementById("detailPop").textContent =
-          (currentSettings.rn1 > 0 ? 80 : 0) + "%";
+        document.getElementById("detailHumidity").textContent = (40 + Math.random() * 20).toFixed(0) + "%";
+        document.getElementById("detailWind").textContent = currentSettings.wsd + "m/s";
+        document.getElementById("detailWindDir").textContent = directionsList[windIdx] + "풍";
+        document.getElementById("detailPop").textContent = (currentSettings.rn1 > 0 ? 80 : 0) + "%";
 
         // Feels Like Update
-        document.getElementById("sampleFeelsLike").textContent =
-          `체감 ${(24 + Math.random() * 4).toFixed(0)}°`;
+        // Feels Like Update
+        if (currentSettings.yFeelsDiff !== undefined) {
+          document.getElementById("yFeelsDiffVal").textContent = (currentSettings.yFeelsDiff > 0 ? "+" : "") + currentSettings.yFeelsDiff + "°C";
+        }
+        if (currentSettings.tFeelsDiff !== undefined) {
+          document.getElementById("tFeelsDiffVal").textContent = (currentSettings.tFeelsDiff > 0 ? "+" : "") + currentSettings.tFeelsDiff + "°C";
+        }
+        document.getElementById("sampleFeelsLike").textContent = `체감 ${(24 + Math.random() * 4 + currentSettings.yFeelsDiff).toFixed(0)}°`;
 
         // Mood Message Logic (Random Selection)
         const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
         const getMood = () => {
           if (maxDust >= 3) return pick(moodMessages.dust);
-          if (currentSettings.weather === "rain" || currentSettings.rn1 > 0)
-            return pick(moodMessages.rain);
-          if (currentSettings.weather === "snow")
-            return pick(moodMessages.snow);
-          if (currentSettings.weather === "clear")
-            return pick(moodMessages.clear);
+          if (currentSettings.weather === "rain" || currentSettings.rn1 > 0) return pick(moodMessages.rain);
+          if (currentSettings.weather === "snow") return pick(moodMessages.snow);
+          if (currentSettings.weather === "clear") return pick(moodMessages.clear);
           return pick(moodMessages.default);
         };
         document.getElementById("moodText").textContent = getMood();
@@ -916,9 +671,7 @@
             drop.style.left = Math.random() * 130 - 15 + "%";
             drop.style.top = "-" + Math.random() * 50 + "px";
             drop.style.transform = `rotate(${windTilt}deg) skewX(${windTilt}deg)`;
-            drop.style.animationDuration =
-              (Math.random() * 0.5 + 1.2) / (1 + currentSettings.wsd * 0.2) +
-              "s";
+            drop.style.animationDuration = (Math.random() * 0.5 + 1.2) / (1 + currentSettings.wsd * 0.2) + "s";
             drop.style.animationDelay = `-${Math.random() * 2}s`;
             particles.appendChild(drop);
           }
@@ -931,8 +684,7 @@
             snow.style.height = snow.style.width;
             snow.style.left = Math.random() * 130 - 15 + "%";
             snow.style.transform = `rotate(${windTilt}deg) skewX(${windTilt}deg)`;
-            snow.style.animationDuration =
-              Math.random() * 5 + 5 / (1 + currentSettings.wsd * 0.1) + "s";
+            snow.style.animationDuration = Math.random() * 5 + 5 / (1 + currentSettings.wsd * 0.1) + "s";
             snow.style.animationDelay = `-${Math.random() * 10}s`;
             particles.appendChild(snow);
           }
@@ -946,20 +698,14 @@
             layer.className = "thunder-layer";
             document.getElementById("simThunder").appendChild(layer);
             setTimeout(() => layer.remove(), 300);
-            thunderTimer = setTimeout(
-              triggerThunder,
-              3000 + Math.random() * 7000,
-            );
+            thunderTimer = setTimeout(triggerThunder, 3000 + Math.random() * 7000);
           };
           thunderTimer = setTimeout(triggerThunder, 3000);
         }
 
         // 6. Text Contrast
         if (currentSettings.textColorOverride === "auto") {
-          const isDark =
-            ["night", "sunset"].includes(currentSettings.time) ||
-            currentSettings.weather === "rain" ||
-            currentSettings.weather === "clouds";
+          const isDark = ["night", "sunset"].includes(currentSettings.time) || currentSettings.weather === "rain" || currentSettings.weather === "clouds";
           preview.classList.toggle("text-white", isDark);
           preview.classList.toggle("text-slate-900", !isDark);
           preview.style.color = "";
@@ -974,32 +720,18 @@
         }
 
         // Labels
-        document.getElementById("wsdVal").textContent =
-          currentSettings.wsd + " m/s";
-        const directions = [
-          "북",
-          "북동",
-          "동",
-          "남동",
-          "남",
-          "남서",
-          "서",
-          "북서",
-        ];
+        document.getElementById("wsdVal").textContent = currentSettings.wsd + " m/s";
+        const directions = ["북", "북동", "동", "남동", "남", "남서", "서", "북서"];
         const idx = Math.floor(((currentSettings.vec + 22.5) % 360) / 45);
-        document.getElementById("vecVal").textContent =
-          directions[idx] + "풍 (" + currentSettings.vec + "°)";
-        document.getElementById("rn1Val").textContent =
-          currentSettings.rn1 + " mm";
+        document.getElementById("vecVal").textContent = directions[idx] + "풍 (" + currentSettings.vec + "°)";
+        document.getElementById("rn1Val").textContent = currentSettings.rn1 + " mm";
       }
 
       function setTextColor(mode) {
         currentSettings.textColorOverride = mode;
         if (mode === "custom") {
-          currentSettings.customColor =
-            document.getElementById("customColor").value;
-          document.getElementById("customHex").value =
-            currentSettings.customColor.toUpperCase();
+          currentSettings.customColor = document.getElementById("customColor").value;
+          document.getElementById("customHex").value = currentSettings.customColor.toUpperCase();
         }
         document.querySelectorAll(".text-btn").forEach((btn) => {
           const isActive = btn.dataset.color === mode;
@@ -1081,12 +813,10 @@
         currentSettings.time = e.target.value;
         updateSimulator();
       });
-      document
-        .getElementById("weatherSelect")
-        .addEventListener("change", (e) => {
-          currentSettings.weather = e.target.value;
-          updateSimulator();
-        });
+      document.getElementById("weatherSelect").addEventListener("change", (e) => {
+        currentSettings.weather = e.target.value;
+        updateSimulator();
+      });
       document.getElementById("wsdRange").addEventListener("input", (e) => {
         currentSettings.wsd = parseFloat(e.target.value);
         updateSimulator();
@@ -1107,36 +837,354 @@
         currentSettings.pm25 = parseInt(e.target.value);
         updateSimulator();
       });
-      document
-        .getElementById("yTempDiffRange")
-        .addEventListener("input", (e) => {
-          currentSettings.yTempDiff = parseFloat(e.target.value);
-          updateSimulator();
+      document.getElementById("yTempDiffRange").addEventListener("input", (e) => {
+        currentSettings.yTempDiff = parseFloat(e.target.value);
+        updateSimulator();
+      });
+      document.getElementById("yFeelsDiffRange").addEventListener("input", (e) => {
+        currentSettings.yFeelsDiff = parseFloat(e.target.value);
+        updateSimulator();
+      });
+      document.getElementById("tTempDiffRange").addEventListener("input", (e) => {
+        currentSettings.tTempDiff = parseFloat(e.target.value);
+        updateSimulator();
+      });
+      document.getElementById("tFeelsDiffRange").addEventListener("input", (e) => {
+        currentSettings.tFeelsDiff = parseFloat(e.target.value);
+        updateSimulator();
+      });
+      document.getElementById("thunderToggle").addEventListener("change", (e) => {
+        currentSettings.thunder = e.target.checked;
+        updateSimulator();
+      });
+
+      // ==========================================
+      // Preview Data Definition & Renderer
+      // ==========================================
+
+      const previewOutfitCases = [
+        {
+          category: "1️⃣ 특수 기상 (Special)",
+          cases: [
+            {
+              condition: "🔥 폭염 (33°C 이상)",
+              data: {
+                summary: "한여름이에요. 최대한 시원하게 입는 게 최고예요 🥵",
+                emoji: "🥵",
+                color: "bg-red-100 text-red-700 border-red-200",
+                items: [
+                  { name: "민소매", icon: "🎽" },
+                  { name: "반팔", icon: "👕" },
+                  { name: "반바지", icon: "🩳" },
+                  { name: "린넨 옷", icon: "👚" },
+                ],
+              },
+            },
+            {
+              condition: "❄️ 한파 (-10°C 이하)",
+              data: {
+                summary: "칼바람이 매서워요. 완전 무장하세요 🥶",
+                emoji: "🥶",
+                color: "bg-slate-200 text-slate-700 border-slate-300",
+                items: [
+                  { name: "히트텍", icon: "♨️" },
+                  { name: "니트/맨투맨", icon: "👕" },
+                  { name: "기모바지", icon: "👖" },
+                  { name: "패딩", icon: "🧥" },
+                  { name: "두꺼운 코트", icon: "🧥" },
+                ],
+              },
+            },
+            {
+              condition: "🌧️ 폭우 (시간당 5mm 이상)",
+              data: {
+                summary: "비가 많이 와요. 젖지 않게 조심하세요 ☔",
+                emoji: "⛈️",
+                color: "bg-slate-300 text-slate-800 border-slate-400",
+                items: [
+                  { name: "긴팔 상의", icon: "👕" },
+                  { name: "두꺼운 하의", icon: "👖" },
+                  { name: "레인코트", icon: "🧥" },
+                  { name: "방수 아우터", icon: "🧥" },
+                ],
+              },
+            },
+            {
+              condition: "❄️ 폭설 (눈 + 시간당 5mm 이상)",
+              data: {
+                summary: "눈이 많이 와요. 방수와 보온에 신경 쓰세요 ❄️",
+                emoji: "❄️",
+                color: "bg-slate-300 text-slate-800 border-slate-400",
+                items: [
+                  { name: "긴팔 상의", icon: "👕" },
+                  { name: "두꺼운 하의", icon: "👖" },
+                  { name: "레인코트", icon: "🧥" },
+                  { name: "방수 아우터", icon: "🧥" },
+                ],
+              },
+            },
+          ],
+        },
+        {
+          category: "2️⃣ 체감 보정 (Correction)",
+          cases: [
+            {
+              condition: "🌬️ 강풍 (9m/s 이상)",
+              data: {
+                summary: "바람 때문에 더 춥게 느껴져요 🌬️",
+                emoji: "🌬️",
+                color: "bg-blue-100 text-blue-700 border-blue-200",
+                items: [
+                  { name: "긴팔 상의", icon: "👕" },
+                  { name: "니트/맨투맨", icon: "👕" },
+                  { name: "바람막이", icon: "🧥" },
+                  { name: "트렌치코트", icon: "🧥" },
+                ],
+              },
+            },
+            {
+              condition: "🌡️ 일교차 큼 (10°C 이상)",
+              data: {
+                summary: "아침저녁으로 기온 차가 커요 🌡️ 레이어드 룩 추천!",
+                emoji: "🌡️",
+                color: "bg-purple-50 text-purple-600 border-purple-100",
+                items: [
+                  { name: "긴팔 상의", icon: "👕" },
+                  { name: "얇은 니트/셔츠", icon: "👔" },
+                  { name: "가디건", icon: "🧥" },
+                  { name: "얇은 자켓", icon: "🧥" },
+                ],
+              },
+            },
+            {
+              condition: "☔ 비 (일반)",
+              data: {
+                summary: "비 때문에 더 서늘하게 느껴져요 ☔",
+                emoji: "☔",
+                color: "bg-slate-200 text-blue-800 border-blue-300",
+                items: [
+                  { name: "긴팔 상의", icon: "👕" },
+                  { name: "얇은 니트/셔츠", icon: "👔" },
+                  { name: "편한 하의", icon: "👖" },
+                  { name: "레인 재킷", icon: "🧥" },
+                  { name: "방수 바람막이", icon: "🧥" },
+                ],
+              },
+            },
+            {
+              condition: "❄️ 눈 (일반)",
+              data: {
+                summary: "눈 오는 날이에요 ❄️",
+                emoji: "❄️",
+                color: "bg-white text-slate-600 border-slate-200 shadow-sm",
+                items: [
+                  { name: "니트/두꺼운 상의", icon: "👕" },
+                  { name: "기모/두꺼운 하의", icon: "👖" },
+                  { name: "패딩", icon: "🧥" },
+                  { name: "두꺼운 코트", icon: "🧥" },
+                ],
+              },
+            },
+          ],
+        },
+        {
+          category: "3️⃣ 기본 기온 (Basic Temp)",
+          cases: [
+            {
+              condition: "🥵 매우 더움 (28°C 이상)",
+              data: {
+                summary: "가만히 있어도 더운 날이에요. 최대한 가볍게 👕",
+                emoji: "🥵",
+                color: "bg-red-50 text-red-600 border-red-100",
+                items: [
+                  { name: "반팔/민소매", icon: "🎽" },
+                  { name: "반바지", icon: "🩳" },
+                  { name: "얇은 소재", icon: "👚" },
+                ],
+              },
+            },
+            {
+              condition: "😎 덥지만 활동 가능 (23~27°C)",
+              data: {
+                summary: "조금 덥지만 얇은 옷이면 괜찮아요 😎",
+                emoji: "😎",
+                color: "bg-orange-50 text-orange-600 border-orange-100",
+                items: [
+                  { name: "반팔", icon: "👕" },
+                  { name: "얇은 셔츠", icon: "👔" },
+                  { name: "면바지/반바지", icon: "🩳" },
+                  { name: "얇은 셔츠", icon: "👔" },
+                ],
+              },
+            },
+            {
+              condition: "😊 쾌적 (18~22°C)",
+              data: {
+                summary: "활동하기 딱 좋은 날씨예요 😊",
+                emoji: "😊",
+                color: "bg-green-50 text-green-600 border-green-100",
+                items: [
+                  { name: "긴팔티", icon: "👕" },
+                  { name: "얇은 니트", icon: "🧶" },
+                  { name: "청바지/면바지", icon: "👖" },
+                  { name: "얇은 가디건", icon: "🧥" },
+                  { name: "얇은 자켓", icon: "🧥" },
+                ],
+              },
+            },
+            {
+              condition: "🍂 살짝 서늘 (15~17°C)",
+              data: {
+                summary: "살짝 서늘할 수 있어요 🍂",
+                emoji: "🍂",
+                color: "bg-teal-50 text-teal-600 border-teal-100",
+                items: [
+                  { name: "긴팔", icon: "👕" },
+                  { name: "맨투맨/니트", icon: "🧶" },
+                  { name: "간절기 하의", icon: "👖" },
+                  { name: "가디건", icon: "🧥" },
+                  { name: "얇은 자켓", icon: "🧥" },
+                ],
+              },
+            },
+            {
+              condition: "🧥 추움 (10~14°C)",
+              data: {
+                summary: "외투 없이는 쌀쌀해요. 따뜻하게 입으세요 🌬️",
+                emoji: "🧥",
+                color: "bg-blue-50 text-blue-600 border-blue-100",
+                items: [
+                  { name: "니트", icon: "🧶" },
+                  { name: "두꺼운 긴팔", icon: "👕" },
+                  { name: "일반 하의", icon: "👖" },
+                  { name: "자켓", icon: "🧥" },
+                  { name: "코트", icon: "🧥" },
+                ],
+              },
+            },
+            {
+              condition: "🧣 겨울/더 추움 (10°C 미만)",
+              data: {
+                summary: "많이 추워요. 보온에 신경 쓰세요 🧣",
+                emoji: "🧣",
+                color: "bg-indigo-50 text-indigo-600 border-indigo-100",
+                items: [
+                  { name: "두꺼운 니트", icon: "🧶" },
+                  { name: "기모 바지", icon: "👖" },
+                  { name: "패딩", icon: "🧥" },
+                  { name: "두꺼운 코트", icon: "🧥" },
+                  { name: "목도리", icon: "🧣" },
+                ],
+              },
+            },
+          ],
+        },
+      ];
+
+      const previewItemCases = [
+        { id: "rain", condition: "☔ 비 (강수)", items: [{ id: "umbrella", name: "우산", icon: "☔", reason: "비가 오고 있어요", type: "required" }] },
+        {
+          id: "snow",
+          condition: "❄️ 눈/폭설",
+          items: [
+            { id: "snow_umbrella", name: "우산", icon: "🌂", reason: "눈이 오고 있어요", type: "required" },
+            { id: "nonslip_shoes", name: "미끄럼 방지 신발", icon: "🥾", reason: "길이 미끄러워요", type: "required" },
+          ],
+        },
+        { id: "cold", condition: "❄️ 한파 (-10°C)", items: [{ id: "warm_gear", name: "장갑/목도리", icon: "🧣", reason: "한파주의! 살이 트지 않게 감싸세요", type: "required" }] },
+        { id: "heat", condition: "🔥 폭염 (33°C)", items: [{ id: "water", name: "물병", icon: "💧", reason: "수분 보충이 필수예요", type: "required" }] },
+        { id: "dust", condition: "🌫️ 미세먼지 나쁨", items: [{ id: "mask", name: "마스크", icon: "😷", reason: "미세먼지가 나빠요", type: "required" }] },
+        { id: "uv", condition: "☀️ 자외선 높음 (Option)", items: [{ id: "uv_care", name: "선글라스/선크림", icon: "🕶️", reason: "자외선 지수가 높아요", type: "optional" }] },
+        { id: "diff", condition: "🌡️ 일교차 큼 (Option)", items: [{ id: "cardigan", name: "여벌 겉옷", icon: "🧥", reason: "일교차가 커서 체온 조절이 필요해요", type: "optional" }] },
+        { id: "wind", condition: "🌬️ 바람 강함 (Option)", items: [{ id: "wind_scarf", name: "스카프/바람막이", icon: "🧣", reason: "바람이 차갑게 느껴질 수 있어요", type: "optional" }] },
+        { id: "weak_rain", condition: "🌦️ 약한 비 예보 (Option)", items: [{ id: "folding_umbrella", name: "접이식 우산", icon: "🌂", reason: "혹시 모르니 챙기면 좋아요", type: "optional" }] },
+        { id: "weak_snow", condition: "🌨️ 약한 눈 예보 (Option)", items: [{ id: "hotpack", name: "핫팩", icon: "🔥", reason: "눈발이 날려요. 손 시려울 수 있어요", type: "optional" }] },
+      ];
+
+      const previewMoodMessages = {
+        "특수(폭염/한파)": ["시원한 바람 같은 기분 좋은 소식을 기대해요 🌊", "오늘은의 목표는 ‘버티기’도 성공이에요 ❄️", "따뜻한 것 하나쯤은 꼭 챙겨도 되는 날이에요 ☕"],
+        미세먼지: ["마음만은 누구보다 맑고 화창한 하루 되세요 🌿", "오늘은 밖보다 나를 먼저 챙기는 날이에요 😷"],
+        "비/눈": ["토닥토닥 빗소리에 마음까지 차분해지네요 🌧️", "하얀 눈처럼 설레는 일이 생길 것 같아요 ❄️"],
+        맑음: ["눈부신 햇살만큼 당신의 오늘이 반짝이길 ✨", "하늘까지 응원해주는 하루예요 🌈"],
+        기본: ["포근한 구름 아래 잠시 쉬어가기 좋은 날이에요 ☁️", "천천히 가도 괜찮은 하루예요 ☁️"],
+      };
+
+      // Helper Renderers
+      const pOutfitContainer = document.getElementById("previewOutfitContainer");
+      previewOutfitCases.forEach((group) => {
+        const groupEl = document.createElement("div");
+        groupEl.className = "space-y-6";
+        groupEl.innerHTML = `<h3 class="text-lg font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">${group.category}</h3>`;
+        const list = document.createElement("div");
+        list.className = "flex flex-col gap-6";
+        group.cases.forEach((c) => {
+          const card = document.createElement("div");
+          card.className = "flex flex-col gap-2";
+          const cardVisual = `
+               <div class="p-4 rounded-[1rem] shadow-sm border ${c.data.color} bg-opacity-50 relative overflow-hidden transition-all hover:scale-[1.02] duration-300">
+                  <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 flex items-center justify-center text-2xl bg-white/80 p-1 rounded-full shadow-sm flex-none backdrop-blur-sm">
+                      ${c.data.emoji}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                       <h4 class="text-sm font-bold opacity-70 mb-1 flex justify-between items-center">
+                          <span>${c.condition}</span>
+                       </h4>
+                       <p class="text-sm font-bold opacity-90 break-keep leading-snug mb-3">${c.data.summary}</p>
+                    </div>
+                  </div>
+                  <div class="flex flex-wrap gap-2 pl-[3.25rem]">
+                     ${c.data.items
+                       .map(
+                         (i) => `
+                       <span class="bg-white/60 px-2.5 py-1.5 rounded-lg text-xs font-semibold shadow-sm flex items-center gap-1.5 backdrop-blur-sm">
+                         <span class="text-sm">${i.icon}</span> ${i.name}
+                       </span>
+                     `,
+                       )
+                       .join("")}
+                  </div>
+               </div>`;
+          card.innerHTML = cardVisual;
+          list.appendChild(card);
         });
-      document
-        .getElementById("yFeelsDiffRange")
-        .addEventListener("input", (e) => {
-          currentSettings.yFeelsDiff = parseFloat(e.target.value);
-          updateSimulator();
-        });
-      document
-        .getElementById("tTempDiffRange")
-        .addEventListener("input", (e) => {
-          currentSettings.tTempDiff = parseFloat(e.target.value);
-          updateSimulator();
-        });
-      document
-        .getElementById("tFeelsDiffRange")
-        .addEventListener("input", (e) => {
-          currentSettings.tFeelsDiff = parseFloat(e.target.value);
-          updateSimulator();
-        });
-      document
-        .getElementById("thunderToggle")
-        .addEventListener("change", (e) => {
-          currentSettings.thunder = e.target.checked;
-          updateSimulator();
-        });
+        groupEl.appendChild(list);
+        pOutfitContainer.appendChild(groupEl);
+      });
+
+      const pItemContainer = document.getElementById("previewItemContainer");
+      previewItemCases.forEach((c) => {
+        const wrapper = document.createElement("div");
+        wrapper.className = "bg-white p-5 rounded-2xl border border-slate-100 card-shadow flex flex-col gap-3";
+        wrapper.innerHTML = `
+            <div class="text-xs font-bold text-slate-400 uppercase mb-1">${c.condition}</div>
+            <div class="flex-1 flex flex-col gap-2">
+               ${c.items
+                 .map((i) => {
+                   const isReq = i.type === "required";
+                   return `
+                  <div class="p-3 rounded-xl border ${isReq ? "bg-red-50 border-red-200" : "bg-slate-50 border-slate-200"} flex flex-col gap-1 items-start relative">
+                      <div class="absolute top-2 right-2">
+                         ${isReq ? `<span class="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-extrabold tracking-wide uppercase">MUST</span>` : `<span class="bg-slate-400 text-white text-[9px] px-1.5 py-0.5 rounded-full font-extrabold tracking-wide uppercase">OPTION</span>`}
+                      </div>
+                      <div class="flex items-center gap-2">
+                         <span class="text-2xl">${i.icon}</span>
+                         <span class="text-sm font-bold ${isReq ? "text-slate-800" : "text-slate-600"}">${i.name}</span>
+                      </div>
+                      <p class="text-[11px] font-medium leading-tight ${isReq ? "text-red-500" : "text-slate-500"}">${i.reason}</p>
+                  </div>`;
+                 })
+                 .join("")}
+            </div>`;
+        pItemContainer.appendChild(wrapper);
+      });
+
+      const pMoodContainer = document.getElementById("previewMoodContainer");
+      for (const [key, msgs] of Object.entries(previewMoodMessages)) {
+        const mEl = document.createElement("div");
+        mEl.innerHTML = `<h4 class="font-bold text-slate-700 mb-2 border-l-4 border-blue-400 pl-2">${key}</h4><ul class="list-disc list-inside text-slate-500 space-y-1 text-xs">${msgs.map((m) => `<li>${m}</li>`).join("")}</ul>`;
+        pMoodContainer.appendChild(mEl);
+      }
 
       updateSimulator();
     </script>

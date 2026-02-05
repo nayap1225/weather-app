@@ -1,10 +1,13 @@
 import { Droplets, Sunrise, Sunset, Sun, Shirt, Car, CloudRain, Snowflake, Wind, type LucideIcon } from "lucide-react";
 import { getSunTimes, getUVIndex, getLaundryIndex, getCarWashIndex, groupForecastItems, getWindDirection } from "../utils/weatherUtils";
+import { dfs_grid_to_latlng } from "../utils/coordinateConverter";
 import type { WeatherItem } from "../api/weather";
 
 interface Props {
   weatherData: WeatherItem[];
   forecastData: WeatherItem[] | null;
+  nx: number;
+  ny: number;
 }
 
 interface DetailItemProps {
@@ -30,7 +33,7 @@ const DetailItem = ({ icon: Icon, label, value, subValue, iconColor = "text-blue
   </div>
 );
 
-export default function WeatherDetailCard({ weatherData, forecastData }: Props) {
+export default function WeatherDetailCard({ weatherData, forecastData, nx, ny }: Props) {
   const getValue = (category: string) => weatherData.find((item) => item.category === category)?.obsrValue || "-";
 
   const temperature = parseFloat(getValue("T1H"));
@@ -41,8 +44,11 @@ export default function WeatherDetailCard({ weatherData, forecastData }: Props) 
   const vec = getValue("VEC");
   const time = weatherData[0]?.baseTime || "1200";
 
+  // 좌표 변환 (Grid -> Lat/Lng)
+  const { lat, lng } = dfs_grid_to_latlng(nx, ny);
+
   // 신규 데이터 계산
-  const sunTimes = getSunTimes();
+  const sunTimes = getSunTimes(lat, lng);
   const uv = getUVIndex(sky, time);
   const laundry = getLaundryIndex(isNaN(temperature) ? 0 : temperature, isNaN(humidity) ? 0 : humidity, pty);
   const windDirection = getWindDirection(vec);
@@ -76,6 +82,12 @@ export default function WeatherDetailCard({ weatherData, forecastData }: Props) 
           </div>
         )}
 
+        {/* 습도 */}
+        <DetailItem icon={Droplets} label="습도" value={isNaN(humidity) ? "-" : `${humidity}%`} />
+
+        {/* 풍속 */}
+        <DetailItem icon={Wind} label="풍속" value={`${windVal}m/s`} subValue={windDirection} />
+
         {/* 자외선 지수 */}
         <DetailItem icon={Sun} label="자외선" value={uv.label} subValue={`지수 ${uv.value}`} colorClass={uv.color} subColorClass={uv.color} iconColor="text-orange-300" />
 
@@ -106,12 +118,6 @@ export default function WeatherDetailCard({ weatherData, forecastData }: Props) 
 
         {/* 생활 지수 (세차) */}
         <DetailItem icon={Car} label="세차지수" value={carWash.label} subValue={carWash.tip} />
-
-        {/* 습도 */}
-        <DetailItem icon={Droplets} label="습도" value={isNaN(humidity) ? "-" : `${humidity}%`} />
-
-        {/* 풍속 */}
-        <DetailItem icon={Wind} label="풍속" value={`${windVal}m/s`} subValue={windDirection} />
       </div>
     </div>
   );

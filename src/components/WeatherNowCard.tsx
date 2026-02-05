@@ -13,11 +13,12 @@ interface Props {
   onOpenModal: () => void;
   onCurrentLocation: () => void;
   gpsLoading: boolean;
+  isForecast?: boolean;
 }
 
-export default function WeatherNowCard({ data, dustData, yesterdayData, forecastData, locationName, onOpenModal, onCurrentLocation, gpsLoading }: Props) {
+export default function WeatherNowCard({ data, dustData, yesterdayData, forecastData, locationName, onOpenModal, onCurrentLocation, gpsLoading, isForecast = false }: Props) {
   const getValue = (items: WeatherItem[], category: string) => items.find((item) => item.category === category)?.obsrValue || items.find((item) => item.category === category)?.fcstValue || "-";
-
+  console.log(isForecast);
   const temperature = getValue(data, "T1H");
   const pty = getValue(data, "PTY"); // 강수형태 code
   const sky = getValue(data, "SKY"); // 하늘상태 code
@@ -192,9 +193,10 @@ export default function WeatherNowCard({ data, dustData, yesterdayData, forecast
         </div>
       </div>
 
-      <div className="flex items-end gap-2 mb-1.5 p-4 rounded-[.8rem] bg-black/30 border border-white/5 backdrop-blur-sm shadow-inner justify-center">
+      <div className="flex items-end gap-2 mb-1.5 p-4 rounded-[.8rem] bg-black/30 border border-white/5 backdrop-blur-sm shadow-inner justify-center relative">
         <span className="text-5xl font-bold tracking-tighter drop-shadow-lg">{temperature}°</span>
         <span className="flex flex-col items-center text-sm text-blue-100 mb-2 font-medium opacity-90">(체감 {feelsLike}°)</span>
+        {/* {isForecast && <span className="absolute top-2 right-2 text-[10px] bg-red-500/80 px-1.5 py-0.5 rounded text-white font-bold tracking-tighter shadow-sm animate-pulse">예보값</span>} */}
       </div>
 
       {/* [개선] 기온 비교 메시지 영역 (색상 강조 적용) */}

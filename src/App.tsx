@@ -13,11 +13,12 @@ import WeatherBackground from "./components/WeatherBackground";
 import HeaderLayout from "./components/layout/Header";
 import { dfs_xy_conv } from "./utils/coordinateConverter";
 import { getAddressFromCoords } from "./api/kakao";
-import { getUltraSrtNcst, getVilageFcst, getMidLandFcst, getMidTa, getYesterdayNcst } from "./api/weather";
+import { getUltraSrtNcst, getVilageFcst, getMidLandFcst, getMidTa, getYesterdayNcst, getUltraSrtFcst } from "./api/weather";
 import { getDustInfo, getNearbyStationWithDust, getDustInfoBySgg } from "./api/dust";
 import { findAllRegionsByNxNy, getRegionsInSgg, searchRegions } from "./utils/regionUtils";
 import { getMidTermCode } from "./data/midTermCodes";
 import { mergeForecastData } from "./utils/dailyForecastUtils";
+import { calculateFeelsLike } from "./utils/weatherUtils"; // [New]
 import type { WeatherItem, MidLandItem, MidTaItem } from "./api/weather";
 import type { DustItem } from "./api/dust";
 import type { Region } from "./types/region";
@@ -41,6 +42,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [gpsLoading, setGpsLoading] = useState<boolean>(false);
+  const [isForecastMode, setIsForecastMode] = useState<boolean>(false);
 
   const handleSearch = useCallback(
     async (targetNx?: number, targetNy?: number, explicitRegion?: Region) => {
@@ -50,6 +52,7 @@ function App() {
       setLoading(true);
       setDustLoading(true);
       setError(null);
+      setIsForecastMode(false);
 
       const searchNx = targetNx ?? nx;
       const searchNy = targetNy ?? ny;
@@ -65,17 +68,72 @@ function App() {
       }
 
       try {
-        const [wData, fData, yData] = await Promise.all([
+        const [wData, fData, yData, ufData] = await Promise.all([
           getUltraSrtNcst(searchNx, searchNy).catch((e) => {
             console.error("Current API failed", e);
-            return [];
+            return [] as WeatherItem[];
           }),
           getVilageFcst(searchNx, searchNy).catch((e) => {
             console.error("Forecast API failed", e);
             return null;
           }),
           getYesterdayNcst(searchNx, searchNy),
+          // [New] 초단기예보 추가 조회
+          getUltraSrtFcst(searchNx, searchNy).catch((e) => {
+            console.error("Ultra Forecast API failed", e);
+            return [];
+          }),
         ]);
+
+        // [Logic] 실황 데이터(wData)를 초단기예보(ufData)로 보정
+        // 실황은 40분 지연되므로, 현재 시각의 예보 데이터가 있다면 그걸 우선시함.
+        let isForecastUsed = false;
+
+        if (ufData && ufData.length > 0) {
+          const now = new Date();
+          const curDate = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+          const curHour = String(now.getHours()).padStart(2, "0") + "00";
+
+          // 실황 데이터의 기준 시간 확인
+          const obsBaseTime = wData?.[0]?.baseTime;
+
+          // 실황 데이터가 이미 최신(현재 시간)이라면, 예보로 덮어쓰지 않음 (실측값 우선)
+          // 실황이 구버전(1시간 전)일 때만 초단기예보로 보정
+          if (obsBaseTime !== curHour) {
+            // 현재 시각에 해당하는 초단기예보 찾기
+            const currentForecasts = ufData.filter((item) => item.fcstDate === curDate && item.fcstTime === curHour);
+
+            if (currentForecasts.length > 0) {
+              console.log(`[App] Correcting weather data with forecast for ${curHour}`);
+              isForecastUsed = true;
+
+              currentForecasts.forEach((fcst) => {
+                // 보정할 카테고리: 기온(T1H), 하늘(SKY), 강수(PTY), 습도(REH)
+                if (!["T1H", "SKY", "PTY", "REH", "RN1"].includes(fcst.category)) return;
+
+                const targetIndex = wData.findIndex((w) => w.category === fcst.category);
+                const newValue = fcst.fcstValue || "";
+
+                if (targetIndex !== -1) {
+                  // 기존 실황 데이터 업데이트
+                  wData[targetIndex].obsrValue = newValue;
+                } else {
+                  // 실황에 없는 데이터라면 추가 (예: SKY는 실황에 없음)
+                  wData.push({
+                    baseDate: fcst.baseDate,
+                    baseTime: fcst.baseTime,
+                    category: fcst.category,
+                    nx: fcst.nx,
+                    ny: fcst.ny,
+                    obsrValue: newValue,
+                  });
+                }
+              });
+            }
+          }
+        }
+
+        setIsForecastMode(isForecastUsed);
 
         setWeatherData(wData);
         setForecastData(fData);
@@ -336,20 +394,95 @@ function App() {
                 onOpenModal={() => setShowModal(true)}
                 onCurrentLocation={detectCurrentLocation}
                 gpsLoading={gpsLoading}
+                isForecast={isForecastMode}
               />
               <ForecastList data={forecastData} />
 
               <DustCard dust={dustData} loading={dustLoading} />
 
-              <WeatherDetailCard weatherData={weatherData} forecastData={forecastData} />
+              <WeatherDetailCard weatherData={weatherData} forecastData={forecastData} nx={nx} ny={ny} />
 
               {(() => {
-                const tempItem = weatherData.find((item) => item.category === "T1H");
-                const temp = tempItem ? Number(tempItem.obsrValue) : 0;
-                return <OutfitCard temperature={temp} />;
+                // 옷차림 추천을 위한 데이터 구성
+                const getValue = (cat: string) => {
+                  const item = weatherData.find((i) => i.category === cat);
+                  if (!item) return 0;
+                  return parseFloat(item.obsrValue || item.fcstValue || "0");
+                };
+
+                const currentTemp = getValue("T1H");
+                const windSpeed = getValue("WSD");
+                // 간단한 체감온도 계산 (윈드칠) - utils 재사용 권장되지만 여기선 약식 혹은 import
+                // weatherUtils에서 import 해오는게 좋음.
+                // 상단 import가 되어있는지 확인. 안되어있다면 추가해야함.
+                // 우선 상단에 import 추가했다고 가정하고 작성.
+
+                // 만약 import 못했다면 여기서 간단식 사용:
+                // 체감 = 13.12 + 0.6215*T - 11.37*V^0.16 + 0.3965*T*V^0.16
+                // 하지만 import 하는게 맞음.
+
+                // 일단 여기서는 import 가정하고 변수만 준비
+
+                // 강수형태 (코드값 문자열)
+                const ptyItem = weatherData.find((i) => i.category === "PTY");
+                const ptyCode = ptyItem ? ptyItem.obsrValue || ptyItem.fcstValue || "0" : "0";
+
+                const conditions = {
+                  currentTemp,
+                  feelsLike: calculateFeelsLike(currentTemp, windSpeed),
+                  ptyCode,
+                  rainAmount: getValue("RN1"),
+                  windSpeed,
+                  pm10Grade: dustData?.pm10Grade || "2", // 기본 보통
+                  currentHour: new Date().getHours(),
+                  minTemp: weeklyData?.[0]?.minTemp,
+                  maxTemp: weeklyData?.[0]?.maxTemp,
+                };
+
+                return <OutfitCard conditions={conditions} />;
               })()}
 
-              <ItemCard weatherData={weatherData} dustData={dustData} forecastData={forecastData} />
+              {(() => {
+                // 준비물 카드 데이터 구성
+                const getValue = (cat: string) => {
+                  const item = weatherData.find((i) => i.category === cat);
+                  if (!item) return 0;
+                  return parseFloat(item.obsrValue || item.fcstValue || "0");
+                };
+
+                const currentTemp = getValue("T1H");
+                const windSpeed = getValue("WSD");
+                const feelsLike = calculateFeelsLike(currentTemp, windSpeed);
+                const ptyItem = weatherData.find((i) => i.category === "PTY");
+                const ptyCode = ptyItem ? Number(ptyItem.obsrValue || ptyItem.fcstValue || "0") : 0;
+
+                const minTemp = weeklyData?.[0]?.minTemp;
+                const maxTemp = weeklyData?.[0]?.maxTemp;
+                const diffTemp = minTemp !== undefined && maxTemp !== undefined ? maxTemp - minTemp : 0;
+                const currentHour = new Date().getHours();
+
+                // 강수확률(POP) 최대값 추출 (향후 6~12시간?)
+                let maxPop = 0;
+                if (forecastData) {
+                  const pops = forecastData.filter((i) => i.category === "POP").map((i) => Number(i.fcstValue));
+                  if (pops.length > 0) maxPop = Math.max(...pops);
+                }
+
+                const itemConditions = {
+                  ptyCode,
+                  rainAmount: getValue("RN1"),
+                  temp: currentTemp,
+                  feelsLike,
+                  diffTemp,
+                  windSpeed,
+                  pm10Grade: Number(dustData?.pm10Grade || "1"),
+                  uvIndex: 0, // API 부재로 0 처리
+                  pop: maxPop,
+                  isNight: currentHour >= 20 || currentHour <= 6,
+                };
+
+                return <ItemCard conditions={itemConditions} />;
+              })()}
 
               <WeeklyForecast dailyData={weeklyData} />
               <InstallPrompt />

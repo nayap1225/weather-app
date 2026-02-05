@@ -1,200 +1,209 @@
-import type { WeatherItem } from "../api/weather";
-import type { DustItem } from "../api/dust";
-
-export interface RecommendItem {
+export interface PrepareItem {
   id: string;
   name: string;
   icon: string; // Emoji
   reason: string;
-  bgColor: string;
   type: "required" | "optional";
+  bgColor?: string; // Optional for custom styling hints
 }
 
-export const getRecommendedItems = (weatherData: WeatherItem[] | null, dustData: DustItem | null, forecastData: WeatherItem[] | null): RecommendItem[] => {
-  const items: RecommendItem[] = [];
-  if (!weatherData) return items;
+export interface ItemConditions {
+  ptyCode: number; // 0~4, ...
+  rainAmount: number; // RN1
+  temp: number; // T1H
+  feelsLike: number; // 체감온도
+  diffTemp: number; // 일교차 (max - min)
+  windSpeed: number; // WSD
+  pm10Grade: number; // 1~4
+  uvIndex: number; // 자외선 (없으면 0)
+  pop: number; // 강수확률 (Max of near future)
+  isNight: boolean; // 밤 여부
+}
 
-  // 1. 데이터 추출
-  // 강수형태(PTY): 0없음 1비 2비/눈 3눈 4소나기
-  const ptyItem = weatherData.find((d) => d.category === "PTY");
-  let pty = ptyItem ? Number(ptyItem.obsrValue) : 0;
+/**
+ * 준비물 추천 로직 (User Strict Guidelines)
+ * - Required: 필수 (경고성)
+ * - Optional: 옵셔널 (편의성)
+ * - 옷차림 카드와 중복 배제 (의류 제외, 소지품 위주)
+ */
+export const getRecommendedItems = (cond: ItemConditions): PrepareItem[] => {
+  const items: PrepareItem[] = [];
+  const { ptyCode, temp, feelsLike, diffTemp, windSpeed, pm10Grade, uvIndex, pop, isNight } = cond;
 
-  // 습도(REH)
-  const rehItem = weatherData.find((d) => d.category === "REH");
-  const humidity = rehItem ? Number(rehItem.obsrValue) : 50;
+  // =========================================================
+  // 1️⃣ 필수 준비물 (Required) - 조건 충족 시 무조건 노출
+  // =========================================================
 
-  // 1시간 강수량(RN1) - "1.0mm" 같은 문자열일 수 있음
-  const rn1Item = weatherData.find((d) => d.category === "RN1");
-  const rainAmount = rn1Item ? parseFloat(rn1Item.obsrValue || "0") : 0;
+  // ☔ 비 (강수형태 1,4 OR 강수확률 >= 60%?)
+  // User Guide: "비, 소나기, 강수 확률 높음" -> 우산
+  // PTY 1(비), 2(비/눈), 4(소나기) OR POP >= 60 (임의 기준)
+  // PTY가 0인데 POP만 높은 경우도 "비 예보"로 칠 수 있음.
+  // 여기서는 PTY가 있으면 확실히 넣고, PTY 없는데 POP 높으면 넣음.
+  const isRaining = ptyCode === 1 || ptyCode === 2 || ptyCode === 4;
+  const isRainForecast = !isRaining && pop >= 60; // 강수확률 높음
 
-  // 예보 데이터 확인
-  let rainInForecast = false;
-  let snowInForecast = false;
-  let maxTemp = -999;
-  let minTemp = 999;
-
-  if (forecastData) {
-    const ptyForecasts = forecastData.filter((item) => item.category === "PTY").slice(0, 12);
-
-    rainInForecast = ptyForecasts.some((item) => {
-      const val = Number(item.fcstValue);
-      // 1:비, 2:비/눈, 4:소나기, 5:빗방울, 6:빗방울눈날림
-      return val === 1 || val === 2 || val === 4 || val === 5 || val === 6;
-    });
-
-    snowInForecast = ptyForecasts.some((item) => {
-      const val = Number(item.fcstValue);
-      // 2:비/눈, 3:눈, 6:빗방울눈날림, 7:눈날림
-      return val === 2 || val === 3 || val === 6 || val === 7;
-    });
-
-    const temps = forecastData.filter((item) => item.category === "TMP" || item.category === "T1H" || item.category === "T3H").map((item) => Number(item.fcstValue));
-
-    if (temps.length > 0) {
-      maxTemp = Math.max(...temps);
-      minTemp = Math.min(...temps);
-    }
-  }
-
-  // 기온(T1H) - 현재 기온
-  const tempItem = weatherData.find((d) => d.category === "T1H");
-  const temp = tempItem ? Number(tempItem.obsrValue) : 20;
-
-  // 미세먼지 등급 (1좋음 2보통 3나쁨 4매우나쁨)
-  const dustGrade = dustData ? Number(dustData.pm10Grade) : 0;
-  const fineDustGrade = dustData ? Number(dustData.pm25Grade) : 0;
-
-  // 2. 조건 확인
-
-  // [필수] 우산
-  if (pty === 1 || pty === 2 || pty === 4 || pty === 5 || pty === 6 || rainInForecast) {
+  if (isRaining || isRainForecast) {
     items.push({
       id: "umbrella",
       name: "우산",
       icon: "☔",
-      reason: rainInForecast && (pty === 0 || pty === 5) ? "비 예보가 있어요" : "비가 내리고 있어요",
-      bgColor: "bg-blue-100 text-blue-700",
+      reason: isRaining ? "비가 오고 있어요" : "비 올 확률이 높아요",
       type: "required",
     });
   }
 
-  // [필수] 눈 관련
-  if (pty === 3 || pty === 6 || pty === 7 || snowInForecast) {
+  // ❄️ 눈 / 폭설
+  // PTY 3(눈), 2(비/눈)
+  if (ptyCode === 3 || ptyCode === 2) {
+    // 2번은 위에서 우산 챙겼으니, 방한화만? 2번은 우산도 필요하고 미끄럼방지도 필요. 중복 허용? 우산은 위에서 챙김.
+    // User Guide: "눈, 눈날림, 적설" -> 미끄럼 방지 신발, 우산 또는 방수 용품
+    // if Umbrella already added (Code 2), add Non-slip shoes.
+    // Code 3 (Snow) -> Umbrella needed? Yes snow umbrella.
+    // Let's check duplicate.
+    const hasUmbrella = items.some((i) => i.id === "umbrella");
+
+    if (!hasUmbrella) {
+      items.push({
+        id: "snow_umbrella",
+        name: "우산",
+        icon: "🌂",
+        reason: "눈이 오고 있어요",
+        type: "required",
+      });
+    }
+
     items.push({
-      id: "snow_gear",
-      name: "우산/방한화",
-      icon: "🌨️",
-      reason: snowInForecast && (pty === 0 || pty === 7) ? "눈 예보가 있어요" : "눈이 오고 있어요",
-      bgColor: "bg-slate-100 text-slate-700",
+      id: "nonslip_shoes",
+      name: "미끄럼 방지 신발",
+      icon: "🥾",
+      reason: "길이 미끄러워요",
       type: "required",
     });
   }
 
-  // [필수] 마스크
-  if (dustGrade >= 3 || fineDustGrade >= 3) {
-    const isFine = fineDustGrade >= 3 && dustGrade < 3;
+  // ❄️ 한파 (영하 10도 이하)
+  // User Guide: 장갑, 목도리
+  if (temp <= -10 || feelsLike <= -12) {
+    items.push({
+      id: "warm_gear",
+      name: "장갑/목도리",
+      icon: "🧣",
+      reason: "한파주의! 살이 트지 않게 감싸세요",
+      type: "required",
+    });
+  }
+
+  // 🔥 폭염 (33도 이상)
+  // User Guide: 물병, 양산 또는 모자
+  if (temp >= 33) {
+    items.push({
+      id: "water",
+      name: "물병",
+      icon: "💧",
+      reason: "수분 보충이 필수예요",
+      type: "required",
+    });
+    items.push({
+      id: "sun_shade",
+      name: "양산/모자",
+      icon: "🧢",
+      reason: "직사광선을 피하세요",
+      type: "required",
+    });
+  }
+
+  // 🌫️ 미세먼지 나쁨 이상 (3, 4)
+  // User Guide: 마스크
+  if (pm10Grade >= 3) {
     items.push({
       id: "mask",
       name: "마스크",
       icon: "😷",
-      reason: isFine ? "초미세먼지 농도가 높아요" : "미세먼지 농도가 높아요",
-      bgColor: "bg-orange-100 text-orange-700",
+      reason: pm10Grade === 4 ? "미세먼지 매우 나쁨!" : "미세먼지가 나빠요",
       type: "required",
     });
   }
 
-  // [추천] 레인부츠
-  if ((pty === 1 || pty === 2 || pty === 4) && rainAmount >= 5) {
+  // =========================================================
+  // 2️⃣ 옵셔널 준비물 (Optional) - 있으면 좋음
+  // =========================================================
+
+  // ☀️ 자외선 높음 (지수 데이터 없으면 임시로 여름 낮)
+  // UV 데이터가 있으면 쓰고, 없으면 5~8월 낮시간 맑음(SKY 1)일 때 추정? 데이터 넘겨받는다고 가정.
+  if (uvIndex >= 6) {
+    // 높음 기준
     items.push({
-      id: "rain_boots",
-      name: "레인부츠",
-      icon: "👢",
-      reason: "비가 꽤 많이 오네요",
-      bgColor: "bg-teal-100 text-teal-700",
+      id: "uv_care",
+      name: "선글라스/선크림",
+      icon: "🕶️",
+      reason: "자외선 지수가 높아요",
       type: "optional",
     });
   }
 
-  // [추천] 미스트/립밤
-  if (humidity < 30) {
-    items.push({
-      id: "mist",
-      name: "미스트/립밤",
-      icon: "🧴",
-      reason: "공기가 매우 건조해요",
-      bgColor: "bg-cyan-100 text-cyan-700",
-      type: "optional",
-    });
-  }
-
-  // [추천] 가디건
-  if (maxTemp !== -999 && minTemp !== 999 && maxTemp - minTemp >= 10) {
+  // 🌡️ 일교차 큼 (>= 10)
+  // User Guide: 여벌 겉옷, 가디건
+  if (diffTemp >= 10) {
     items.push({
       id: "cardigan",
-      name: "가디건",
+      name: "여벌 겉옷",
       icon: "🧥",
-      reason: `일교차가 커요 (${(maxTemp - minTemp).toFixed(0)}℃ 차이)`,
-      bgColor: "bg-violet-100 text-violet-700",
+      reason: "일교차가 커서 체온 조절이 필요해요",
       type: "optional",
     });
   }
 
-  // 날씨 기반
-  if (temp >= 28) {
+  // 🌬️ 바람 강함 (>= 9ms)
+  // User Guide: 얇은 스카프, 바람막이
+  // 바람막이는 옷차림에서 추천했으므로 "얇은 스카프" or "휴대용 바람막이"
+  if (windSpeed >= 9) {
     items.push({
-      id: "hand_fan",
-      name: "손선풍기",
-      icon: "🌪️",
-      reason: "폭염입니다. 더위 조심하세요!",
-      bgColor: "bg-red-100 text-red-700",
+      id: "wind_scarf",
+      name: "스카프/바람막이",
+      icon: "🧣",
+      reason: "바람이 차갑게 느껴질 수 있어요",
       type: "optional",
     });
+  }
+
+  // ☔ 약한 비 예보 (POP 30~59 OR 코드 5 빗방울)
+  const isWeakRain = !isRaining && !isRainForecast && (pop >= 30 || ptyCode === 5);
+  if (isWeakRain) {
     items.push({
-      id: "sun_care",
-      name: "양산/모자",
-      icon: "🧢",
-      reason: "자외선이 강해요",
-      bgColor: "bg-yellow-100 text-yellow-700",
+      id: "folding_umbrella",
+      name: "접이식 우산",
+      icon: "🌂",
+      reason: "혹시 모르니 챙기면 좋아요",
       type: "optional",
     });
-  } else if (temp <= 0) {
+  }
+
+  // ❄️ 약한 눈 예보
+  // 눈날림(7) or 빗방울눈날림(6)
+  if (ptyCode === 6 || ptyCode === 7) {
     items.push({
       id: "hotpack",
       name: "핫팩",
       icon: "🔥",
-      reason: "영하권 추위입니다!",
-      bgColor: "bg-rose-100 text-rose-700",
-      type: "optional",
-    });
-    items.push({
-      id: "gloves",
-      name: "장갑",
-      icon: "🧤",
-      reason: "손 시려움을 방지하세요",
-      bgColor: "bg-indigo-100 text-indigo-700",
-      type: "optional",
-    });
-  } else if (temp <= 5) {
-    items.push({
-      id: "scarf",
-      name: "목도리",
-      icon: "🧣",
-      reason: "체온 유지에 좋아요",
-      bgColor: "bg-stone-100 text-stone-700",
+      reason: "눈발이 날려요. 손 시려울 수 있어요",
       type: "optional",
     });
   }
 
-  // 기본값
-  if (items.length === 0) {
-    items.push({
-      id: "smile",
-      name: "가벼운 마음",
-      icon: "😊",
-      reason: "날씨가 좋아요! 가볍게 외출하세요",
-      bgColor: "bg-green-100 text-green-700",
-      type: "optional",
-    });
+  // 🌙 밤 외출
+  if (isNight && items.length < 4) {
+    // 너무 많으면 생략
+    // 얇은 겉옷 (일교차랑 겹칠 수 있음 checking)
+    const hasOuter = items.some((i) => i.id === "cardigan");
+    if (!hasOuter && temp < 20) {
+      items.push({
+        id: "night_outer",
+        name: "가벼운 외투",
+        icon: "🧥",
+        reason: "밤에는 쌀쌀할 수 있어요",
+        type: "optional",
+      });
+    }
   }
 
   return items;

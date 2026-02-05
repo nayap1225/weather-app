@@ -128,38 +128,29 @@ export const groupForecastItems = (items: WeatherItem[]) => {
   return grouped.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
 };
 
+import SunCalc from "suncalc";
+
 /**
- * 일출/일몰 시간을 계산합니다. (단순화된 알고리즘)
+ * 일출/일몰 시간을 계산합니다. (SunCalc 라이브러리 활용)
+ * @param lat 위도
+ * @param lng 경도
  */
-export const getSunTimes = () => {
+export const getSunTimes = (lat: number, lng: number) => {
   const now = new Date();
-  const times = {
-    sunrise: "07:30",
-    sunset: "18:00",
+  const times = SunCalc.getTimes(now, lat, lng);
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString("ko-KR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
   };
 
-  // 실제로는 정확한 계산이 필요하지만, 여기서는 좌표와 날짜를 기반으로 한 근사치 또는
-  // 라이브러리 역할을 할 함수를 구현합니다.
-  // 실제 상용 서비스라면 suncalc 같은 라이브러리를 쓰지만, 여기서는 구현을 단순화하거나
-  // 표준 시간대를 고려한 근사 로직을 넣습니다.
-
-  // 한국 기준 대략적인 보정 (겨울/여름 차이 반영)
-  const month = now.getMonth() + 1;
-  if (month >= 11 || month <= 2) {
-    // 겨울
-    times.sunrise = "07:40";
-    times.sunset = "17:30";
-  } else if (month >= 5 && month <= 8) {
-    // 여름
-    times.sunrise = "05:20";
-    times.sunset = "19:40";
-  } else {
-    // 봄/가을
-    times.sunrise = "06:30";
-    times.sunset = "18:30";
-  }
-
-  return times;
+  return {
+    sunrise: formatTime(times.sunrise),
+    sunset: formatTime(times.sunset),
+  };
 };
 
 /**

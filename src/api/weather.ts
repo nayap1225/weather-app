@@ -1,8 +1,4 @@
-import {
-  getCachedData,
-  setCachedData,
-  generateCacheKey,
-} from "../utils/apiCache";
+import { getCachedData, setCachedData, generateCacheKey } from "../utils/apiCache";
 
 // 공공데이터포털 날씨 API 응답 구조
 export interface WeatherItem {
@@ -42,31 +38,17 @@ export interface WeatherResponse {
 // 프록시/서버리스 함수 경로
 const BASE_URL = "/api/weather";
 
-export const getUltraSrtNcst = async (
-  nx: number,
-  ny: number,
-): Promise<WeatherItem[]> => {
+export const getUltraSrtNcst = async (nx: number, ny: number): Promise<WeatherItem[]> => {
   console.log(`[API] getUltraSrtNcst - nx: ${nx}, ny: ${ny}`);
   const { base_date, base_time } = getBaseDateTime();
 
   // 캐시 키 생성 (좌표 + 기준시간)
-  const cacheKey = generateCacheKey(
-    "weather_ncst",
-    nx,
-    ny,
-    base_date,
-    base_time,
-  );
+  const cacheKey = generateCacheKey("weather_ncst", nx, ny, base_date, base_time);
   const cached = getCachedData<WeatherItem[]>(cacheKey);
   if (cached) return cached;
 
   // 클라이언트는 필수 가변 인자만 전송 (Key, dataType 등은 서버/프록시에서 주입)
-  const queryParams = [
-    `base_date=${base_date}`,
-    `base_time=${base_time}`,
-    `nx=${nx}`,
-    `ny=${ny}`,
-  ].join("&");
+  const queryParams = [`base_date=${base_date}`, `base_time=${base_time}`, `nx=${nx}`, `ny=${ny}`].join("&");
 
   const url = `${BASE_URL}?${queryParams}`;
 
@@ -79,9 +61,7 @@ export const getUltraSrtNcst = async (
   const json = (await response.json()) as WeatherResponse;
 
   if (json.response?.header?.resultCode !== "00") {
-    throw new Error(
-      `API Error: ${json.response?.header?.resultMsg || "Unknown error"}`,
-    );
+    throw new Error(`API Error: ${json.response?.header?.resultMsg || "Unknown error"}`);
   }
 
   const items = json.response?.body?.items?.item || [];
@@ -107,8 +87,8 @@ export const getBaseDateTime = (offsetDays: number = 0) => {
     // 안전하게 23시간 전 데이터를 조회하여 '어제 이 시간대'의 가장 가까운 실측치를 확보합니다.
     now.setHours(now.getHours() - 23);
   } else {
-    // 오늘 데이터는 API 업데이트 주기(보통 매시 40분 이후)를 고려하여 45분 이전엔 이전 시간 사용
-    if (now.getMinutes() < 45) {
+    // 오늘 데이터는 API 업데이트 주기(보통 매시 40분 이후)를 고려하여 40분 이전엔 이전 시간 사용
+    if (now.getMinutes() < 40) {
       now.setHours(now.getHours() - 1);
     }
   }
@@ -127,29 +107,15 @@ export const getBaseDateTime = (offsetDays: number = 0) => {
 /**
  * 어제의 초단기 실황 데이터를 조회합니다.
  */
-export const getYesterdayNcst = async (
-  nx: number,
-  ny: number,
-): Promise<WeatherItem[]> => {
+export const getYesterdayNcst = async (nx: number, ny: number): Promise<WeatherItem[]> => {
   try {
     const { base_date, base_time } = getBaseDateTime(-1);
 
-    const cacheKey = generateCacheKey(
-      "weather_yesterday",
-      nx,
-      ny,
-      base_date,
-      base_time,
-    );
+    const cacheKey = generateCacheKey("weather_yesterday", nx, ny, base_date, base_time);
     const cached = getCachedData<WeatherItem[]>(cacheKey);
     if (cached) return cached;
 
-    const queryParams = [
-      `base_date=${base_date}`,
-      `base_time=${base_time}`,
-      `nx=${nx}`,
-      `ny=${ny}`,
-    ].join("&");
+    const queryParams = [`base_date=${base_date}`, `base_time=${base_time}`, `nx=${nx}`, `ny=${ny}`].join("&");
 
     const url = `${BASE_URL}?${queryParams}`;
     const response = await fetch(url);
@@ -158,9 +124,7 @@ export const getYesterdayNcst = async (
     const json = (await response.json()) as WeatherResponse;
     if (json.response?.header?.resultCode !== "00") {
       // 로직 에러(예: 최근 1일 자료만 제공) 발생 시 빈 배열 반환하여 메인 로직 보호
-      console.warn(
-        `[API] Yesterday Alert: ${json.response?.header?.resultMsg}`,
-      );
+      console.warn(`[API] Yesterday Alert: ${json.response?.header?.resultMsg}`);
       return [];
     }
 
@@ -227,21 +191,12 @@ const getForecastBaseTime = () => {
   };
 };
 
-export const getVilageFcst = async (
-  nx: number,
-  ny: number,
-): Promise<WeatherItem[]> => {
+export const getVilageFcst = async (nx: number, ny: number): Promise<WeatherItem[]> => {
   console.log(`[API] getVilageFcst - nx: ${nx}, ny: ${ny}`);
   const { base_date, base_time } = getForecastBaseTime();
 
   // 캐시 키 생성
-  const cacheKey = generateCacheKey(
-    "weather_fcst",
-    nx,
-    ny,
-    base_date,
-    base_time,
-  );
+  const cacheKey = generateCacheKey("weather_fcst", nx, ny, base_date, base_time);
   const cached = getCachedData<WeatherItem[]>(cacheKey);
   if (cached) return cached;
 
@@ -257,11 +212,60 @@ export const getVilageFcst = async (
   console.log(`[Forecast API] ${url}`);
 
   if (json.response?.header?.resultCode !== "00") {
-    throw new Error(
-      `API Error: ${json.response?.header?.resultMsg || "Unknown error"}`,
-    );
+    throw new Error(`API Error: ${json.response?.header?.resultMsg || "Unknown error"}`);
   }
   if (!items) throw new Error("No Forecast Data");
+
+  setCachedData(cacheKey, items);
+  return items;
+};
+
+/**
+ * (초단기예보용) 가장 가까운 Base_time (1시간 단위: 매시 45분 이후 호출 가능)
+ * 예: 10:30 발표 -> 10:45 이후 조회 가능.
+ * 10:45 이전이면 09:30 데이터를 써야 함.
+ */
+export const getUltraSrtFcstBaseTime = () => {
+  const now = new Date();
+  const outputDate = new Date(now);
+
+  // 현재 분이 45분 미만이면 1시간 전 데이터 사용
+  if (now.getMinutes() < 45) {
+    outputDate.setHours(outputDate.getHours() - 1);
+  }
+
+  const year = outputDate.getFullYear();
+  const month = ("0" + (outputDate.getMonth() + 1)).slice(-2);
+  const day = ("0" + outputDate.getDate()).slice(-2);
+  const hour = ("0" + outputDate.getHours()).slice(-2);
+
+  return {
+    base_date: `${year}${month}${day}`,
+    base_time: `${hour}30`, // 초단기예보는 매시 30분 발표
+  };
+};
+
+export const getUltraSrtFcst = async (nx: number, ny: number): Promise<WeatherItem[]> => {
+  console.log(`[API] getUltraSrtFcst - nx: ${nx}, ny: ${ny}`);
+  const { base_date, base_time } = getUltraSrtFcstBaseTime();
+
+  // 캐시 키 생성
+  const cacheKey = generateCacheKey("weather_ultra_fcst", nx, ny, base_date, base_time);
+  const cached = getCachedData<WeatherItem[]>(cacheKey);
+  if (cached) return cached;
+
+  const url = `/api/ultra-srt-fcst?base_date=${base_date}&base_time=${base_time}&nx=${nx}&ny=${ny}`;
+
+  const response = await fetch(url);
+  if (!response.ok) throw new Error("Ultra Short Forecast API Error");
+
+  const json = (await response.json()) as WeatherResponse;
+  const items = json.response?.body?.items?.item;
+
+  if (json.response?.header?.resultCode !== "00") {
+    throw new Error(`API Error: ${json.response?.header?.resultMsg || "Unknown error"}`);
+  }
+  if (!items) throw new Error("No Ultra Short Forecast Data");
 
   setCachedData(cacheKey, items);
   return items;
@@ -360,9 +364,7 @@ export interface MidTaItem {
   taMax10: number;
 }
 
-export const getMidLandFcst = async (
-  regId: string,
-): Promise<MidLandItem | null> => {
+export const getMidLandFcst = async (regId: string): Promise<MidLandItem | null> => {
   const tmFc = getMidTermBaseTime();
 
   const cacheKey = generateCacheKey("mid_land", regId, tmFc);
@@ -377,18 +379,14 @@ export const getMidLandFcst = async (
     const res = await fetch(url);
     if (!res.ok) {
       const errText = await res.text();
-      console.error(
-        `[MidLand API Error] Status: ${res.status}, Body: ${errText}`,
-      );
+      console.error(`[MidLand API Error] Status: ${res.status}, Body: ${errText}`);
       throw new Error(`MidLand API Status: ${res.status}`);
     }
     const json = await res.json();
 
     // 정상 응답인지 체크 (ResultCode)
     if (json.response?.header?.resultCode !== "00") {
-      console.error(
-        `[MidLand API Logic Error] ${JSON.stringify(json.response?.header)}`,
-      );
+      console.error(`[MidLand API Logic Error] ${JSON.stringify(json.response?.header)}`);
       // 에러를 던지면 App.tsx에서 catch됨 -> 널 반환
     }
 
@@ -416,17 +414,13 @@ export const getMidTa = async (regId: string): Promise<MidTaItem | null> => {
     const res = await fetch(url);
     if (!res.ok) {
       const errText = await res.text();
-      console.error(
-        `[MidTa API Error] Status: ${res.status}, Body: ${errText}`,
-      );
+      console.error(`[MidTa API Error] Status: ${res.status}, Body: ${errText}`);
       throw new Error(`MidTa API Status: ${res.status}`);
     }
     const json = await res.json();
 
     if (json.response?.header?.resultCode !== "00") {
-      console.error(
-        `[MidTa API Logic Error] ${JSON.stringify(json.response?.header)}`,
-      );
+      console.error(`[MidTa API Logic Error] ${JSON.stringify(json.response?.header)}`);
     }
 
     const item = json.response?.body?.items?.item?.[0];
