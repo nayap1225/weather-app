@@ -1,17 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 // 브라우저가 이벤트를 아주 일찍 보낼 경우를 대비해 전역 변수로 관리
 let capturedPrompt: any = null;
 
-if (typeof window !== 'undefined') {
-  window.addEventListener('beforeinstallprompt', (e: any) => {
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeinstallprompt", (e: any) => {
     // 브라우저 기본 설치 팝업 방지
     e.preventDefault();
     // 이벤트를 전역에 저장
     capturedPrompt = e;
     // 이미 훅이 마운트된 상태라면 알림을 보냄
-    window.dispatchEvent(new CustomEvent('pwa-prompt-captured'));
-    console.log('[Global] PWA install prompt captured early');
+    window.dispatchEvent(new CustomEvent("pwa-prompt-captured"));
+    console.log("[Global] PWA install prompt captured early");
   });
 }
 
@@ -24,17 +24,25 @@ export const usePWAInstall = () => {
   useEffect(() => {
     // 현재 독립 실행형(앱) 모드인지 확인
     const checkStandalone = () => {
-      const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches
-        || (window.navigator as any).standalone
-        || document.referrer.includes('android-app://');
+      const isStandaloneMode =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        (window.navigator as any).standalone ||
+        document.referrer.includes("android-app://");
       setIsStandalone(isStandaloneMode);
     };
 
     // iOS 여부 확인
     const checkIOS = () => {
       const userAgent = window.navigator.userAgent.toLowerCase();
-      const isIPhoneOrIPad = /iphone|ipad|ipod/.test(userAgent) ||
-        (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
+      // [Fix] 윈도우 PC에서 개발자 도구 모바일 모드 진입 시 오인식 방지
+      if (userAgent.includes("windows")) {
+        setIsIOS(false);
+        return;
+      }
+      const isIPhoneOrIPad =
+        /iphone|ipad|ipod/.test(userAgent) ||
+        (window.navigator.platform === "MacIntel" &&
+          window.navigator.maxTouchPoints > 1);
       setIsIOS(isIPhoneOrIPad);
     };
 
@@ -46,7 +54,7 @@ export const usePWAInstall = () => {
       setDeferredPrompt(e);
       setIsInstallable(true);
       capturedPrompt = e;
-      console.log('[Hook] PWA install prompt captured via listener');
+      console.log("[Hook] PWA install prompt captured via listener");
     };
 
     const onCaptured = () => {
@@ -54,21 +62,21 @@ export const usePWAInstall = () => {
       setIsInstallable(true);
     };
 
-    window.addEventListener('beforeinstallprompt', handler);
-    window.addEventListener('pwa-prompt-captured', onCaptured);
+    window.addEventListener("beforeinstallprompt", handler);
+    window.addEventListener("pwa-prompt-captured", onCaptured);
 
     // 이미 설치된 경우 처리
-    window.addEventListener('appinstalled', () => {
+    window.addEventListener("appinstalled", () => {
       setDeferredPrompt(null);
       setIsInstallable(false);
       setIsStandalone(true);
       capturedPrompt = null;
-      console.log('PWA was installed');
+      console.log("PWA was installed");
     });
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handler);
-      window.removeEventListener('pwa-prompt-captured', onCaptured);
+      window.removeEventListener("beforeinstallprompt", handler);
+      window.removeEventListener("pwa-prompt-captured", onCaptured);
     };
   }, []);
 
@@ -76,7 +84,9 @@ export const usePWAInstall = () => {
     const promptToUse = deferredPrompt || capturedPrompt;
 
     if (!promptToUse) {
-      alert('설치 준비 중입니다. 잠시만 기다려 주세요. \n\n보통 앱 삭제 직후에는 브라우저 정책상 잠시 차단될 수 있습니다. \n잠시 후 다시 시도하시거나, 브라우저 메뉴의 "홈 화면에 추가"를 이용해 주세요.');
+      alert(
+        '설치 준비 중입니다. 잠시만 기다려 주세요. \n\n보통 앱 삭제 직후에는 브라우저 정책상 잠시 차단될 수 있습니다. \n잠시 후 다시 시도하시거나, 브라우저 메뉴의 "홈 화면에 추가"를 이용해 주세요.',
+      );
       return;
     }
 
@@ -88,7 +98,7 @@ export const usePWAInstall = () => {
     console.log(`User response to the install prompt: ${outcome}`);
 
     // 결과와 상관없이 prompt는 한 번만 사용 가능하므로 초기화
-    if (outcome === 'accepted') {
+    if (outcome === "accepted") {
       setDeferredPrompt(null);
       setIsInstallable(false);
       capturedPrompt = null;

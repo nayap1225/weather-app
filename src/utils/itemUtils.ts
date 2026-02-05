@@ -10,11 +10,7 @@ export interface RecommendItem {
   type: "required" | "optional";
 }
 
-export const getRecommendedItems = (
-  weatherData: WeatherItem[] | null,
-  dustData: DustItem | null,
-  forecastData: WeatherItem[] | null,
-): RecommendItem[] => {
+export const getRecommendedItems = (weatherData: WeatherItem[] | null, dustData: DustItem | null, forecastData: WeatherItem[] | null): RecommendItem[] => {
   const items: RecommendItem[] = [];
   if (!weatherData) return items;
 
@@ -38,9 +34,7 @@ export const getRecommendedItems = (
   let minTemp = 999;
 
   if (forecastData) {
-    const ptyForecasts = forecastData
-      .filter((item) => item.category === "PTY")
-      .slice(0, 12);
+    const ptyForecasts = forecastData.filter((item) => item.category === "PTY").slice(0, 12);
 
     rainInForecast = ptyForecasts.some((item) => {
       const val = Number(item.fcstValue);
@@ -54,14 +48,7 @@ export const getRecommendedItems = (
       return val === 2 || val === 3 || val === 6 || val === 7;
     });
 
-    const temps = forecastData
-      .filter(
-        (item) =>
-          item.category === "TMP" ||
-          item.category === "T1H" ||
-          item.category === "T3H",
-      )
-      .map((item) => Number(item.fcstValue));
+    const temps = forecastData.filter((item) => item.category === "TMP" || item.category === "T1H" || item.category === "T3H").map((item) => Number(item.fcstValue));
 
     if (temps.length > 0) {
       maxTemp = Math.max(...temps);
@@ -80,22 +67,12 @@ export const getRecommendedItems = (
   // 2. 조건 확인
 
   // [필수] 우산
-  if (
-    pty === 1 ||
-    pty === 2 ||
-    pty === 4 ||
-    pty === 5 ||
-    pty === 6 ||
-    rainInForecast
-  ) {
+  if (pty === 1 || pty === 2 || pty === 4 || pty === 5 || pty === 6 || rainInForecast) {
     items.push({
       id: "umbrella",
       name: "우산",
       icon: "☔",
-      reason:
-        rainInForecast && (pty === 0 || pty === 5)
-          ? "비 예보가 있어요"
-          : "비가 내리고 있어요",
+      reason: rainInForecast && (pty === 0 || pty === 5) ? "비 예보가 있어요" : "비가 내리고 있어요",
       bgColor: "bg-blue-100 text-blue-700",
       type: "required",
     });
@@ -107,10 +84,7 @@ export const getRecommendedItems = (
       id: "snow_gear",
       name: "우산/방한화",
       icon: "🌨️",
-      reason:
-        snowInForecast && (pty === 0 || pty === 7)
-          ? "눈 예보가 있어요"
-          : "눈이 오고 있어요",
+      reason: snowInForecast && (pty === 0 || pty === 7) ? "눈 예보가 있어요" : "눈이 오고 있어요",
       bgColor: "bg-slate-100 text-slate-700",
       type: "required",
     });
@@ -157,7 +131,7 @@ export const getRecommendedItems = (
   if (maxTemp !== -999 && minTemp !== 999 && maxTemp - minTemp >= 10) {
     items.push({
       id: "cardigan",
-      name: "가디건/겉옷",
+      name: "가디건",
       icon: "🧥",
       reason: `일교차가 커요 (${(maxTemp - minTemp).toFixed(0)}℃ 차이)`,
       bgColor: "bg-violet-100 text-violet-700",

@@ -17,14 +17,14 @@ interface Props {
 }
 
 export default function LocationPicker({
-  nx,
-  ny,
-  selectedRegion,
+  // nx,
+  // ny,
+  // selectedRegion,
   onLocationChange,
   onSearch,
   loading,
   onClose,
-  onCurrentLocation,
+  // onCurrentLocation,
   gpsLoading,
 }: Props) {
   const [keyword, setKeyword] = useState("");
@@ -36,7 +36,7 @@ export default function LocationPicker({
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const displayRegionName = selectedRegion?.name || `좌표: ${nx}, ${ny}`;
+  // const displayRegionName = selectedRegion?.name || `좌표: ${nx}, ${ny}`;
 
   const handleSelectRegion = useCallback(
     (region: Region) => {
@@ -52,10 +52,7 @@ export default function LocationPicker({
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (
-        wrapperRef.current &&
-        !wrapperRef.current.contains(event.target as Node)
-      ) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
         setShowDropdown(false);
       }
     }
@@ -149,33 +146,24 @@ export default function LocationPicker({
 
   return (
     <div className="w-full px-2">
-      <div
-        className="relative bg-white/95 backdrop-blur-xl w-full rounded-[2.5rem] border border-white/20 p-6 overflow-y-auto max-h-[90vh] md:p-8 shadow-xl"
-        ref={wrapperRef}
-      >
-        <div className="space-y-4">
-          <div className="flex justify-between items-center pr-2">
-            <label className="block text-[18px] font-black text-gray-800 uppercase tracking-widest pl-2">
-              지역 검색
-            </label>
+      <div className="relative bg-white/95 backdrop-blur-xl w-full rounded-[1rem] border border-white/20 p-4 overflow-y-auto max-h-[90vh] shadow-xl" ref={wrapperRef}>
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <label className="block text-[18px] font-black text-gray-800 uppercase tracking-widest">지역 검색</label>
             {onClose && (
-              <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-gray-800 p-1.5 rounded-full hover:bg-gray-100 transition-colors"
-                title="닫기"
-              >
+              <button onClick={onClose} className="text-gray-400 hover:text-gray-800 p-1.5 rounded-full hover:bg-gray-100 transition-colors" title="닫기">
                 <X size={28} color="#000000" />
               </button>
             )}
           </div>
           <div className="relative text-left">
-            <div className="flex gap-2">
+            <div className="flex gap-1">
               <div className="flex-1 relative">
                 <input
                   ref={inputRef}
                   type="text"
                   placeholder="동네 이름을 입력하세요 (예: 역삼동)"
-                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-300 transition text-gray-800 font-semibold text-sm outline-none placeholder:text-gray-800/40"
+                  className="w-full h-11 px-4 text-md bg-white border border-gray-300 rounded-[.5rem] focus:ring-2 focus:ring-blue-300 transition text-gray-800 font-semibold outline-none placeholder:text-gray-800/40"
                   value={keyword}
                   onChange={handleSearchInput}
                   onKeyDown={handleKeyDown}
@@ -193,10 +181,10 @@ export default function LocationPicker({
                   setActiveIndex(-1);
                 }}
                 disabled={loading || gpsLoading}
-                className="w-14 h-14 bg-white border border-gray-300 text-white rounded-xl font-semibold flex items-center justify-center hover:bg-white active:scale-95 transition-all group"
+                className="w-11 h-11 bg-white border border-gray-300 text-white rounded-[.5rem] font-semibold flex items-center justify-center hover:bg-white active:scale-95 transition-all group"
               >
-                <span className="text-xl group-hover:scale-110 transition-transform">
-                  <Search size={24} color="#000000" />
+                <span className="group-hover:scale-110 transition-transform bg-">
+                  <Search size={20} color="#000000" />
                 </span>
               </button>
             </div>
@@ -204,12 +192,9 @@ export default function LocationPicker({
 
           {/* [개선] 팝업(onClose 존재)일 때만 고정 영역 UI 적용, 인라인일 때는 기존 드롭다운 유지 */}
           {onClose ? (
-            <div className="mt-4 bg-white/50 backdrop-blur-md border border-white/20 rounded-2xl overflow-hidden shadow-inner flex flex-col h-[60dvh] min-h-[300px]">
+            <div className="mt-2 bg-gray-400/20 rounded-[.5rem] overflow-hidden shadow-inner flex flex-col h-[60dvh] min-h-[300px]">
               {results.length > 0 ? (
-                <div
-                  ref={listRef}
-                  className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-gray-300"
-                >
+                <div ref={listRef} className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-gray-300">
                   {results.map((region, index) => (
                     <button
                       key={region.code}
@@ -223,9 +208,6 @@ export default function LocationPicker({
                     >
                       <div className="flex items-center justify-between">
                         <span>{region.name}</span>
-                        <span className="text-[10px] opacity-40 uppercase">
-                          Select
-                        </span>
                       </div>
                     </button>
                   ))}
@@ -241,9 +223,7 @@ export default function LocationPicker({
                 <div className="flex-1 flex items-center justify-center p-6 text-center text-slate-200 text-sm font-bold">
                   <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
                     <p className="text-4xl mb-4 opacity-20">🏠</p>
-                    <p className="text-slate-400">
-                      찾으시는 동네를 입력해 주세요
-                    </p>
+                    <p className="text-slate-400">찾으시는 동네를 입력해 주세요</p>
                   </div>
                 </div>
               )}
@@ -252,10 +232,7 @@ export default function LocationPicker({
             /* 인라인 모드: 기존의 절대 위치 드롭다운 방식 */
             showDropdown &&
             results.length > 0 && (
-              <div
-                ref={listRef}
-                className="absolute z-50 w-full bg-white/95 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl mt-2 max-h-64 overflow-y-auto p-2"
-              >
+              <div ref={listRef} className="absolute z-50 w-full bg-white/95 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl mt-2 max-h-64 overflow-y-auto p-2">
                 {results.map((region, index) => (
                   <button
                     key={region.code}
@@ -272,14 +249,11 @@ export default function LocationPicker({
           )}
 
           {/* 인라인 모드 검색 결과 없음 처리 */}
-          {!onClose &&
-            showDropdown &&
-            keyword.length >= 2 &&
-            results.length === 0 && (
-              <div className="absolute z-50 w-full bg-white/95 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl mt-2 p-6 text-center text-slate-400 text-sm font-bold">
-                검색 결과가 없습니다 🔍
-              </div>
-            )}
+          {!onClose && showDropdown && keyword.length >= 2 && results.length === 0 && (
+            <div className="absolute z-50 w-full bg-white/95 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl mt-2 p-6 text-center text-slate-400 text-sm font-bold">
+              검색 결과가 없습니다 🔍
+            </div>
+          )}
         </div>
       </div>
     </div>
