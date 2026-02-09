@@ -445,3 +445,67 @@
 - [x] Create implementation plan
 - [x] Add console logs to `src/api/weather.ts`
 - [ ] Verify (User check)
+
+
+---
+# 📅 Archive Updated: 2026. 02. 09. 10:55:28
+# 📄 File: task.md
+---
+
+- [x] 오늘 날짜의 강수확률만 반영하도록 `App.tsx` 로직 수정
+- [x] 수정 사항 검증 (사용자에게 확인 요청)
+- [x] 접이식 우산 추천 기준 상향 (30% -> 50%) (`src/utils/itemUtils.ts`)
+
+
+---
+# 📅 Archive Updated: 2026. 02. 09. 12:31:45
+# 📄 File: task.md
+---
+
+- [x] Analyze `src/utils/itemUtils.ts` to identify insertion points for new optional items.
+- [x] Create `implementation_plan.md` for the optional items refactor.
+- [x] Update `src/utils/itemUtils.ts` with the new optional items logic.
+- [x] Verify the changes.
+
+
+---
+# 📅 Archive Updated: 2026. 02. 09. 12:37:31
+# 📄 File: task.md
+---
+
+- [x] Create `implementation_plan.md` for monthly optional items logic.
+- [x] Implement monthly optional items logic in `src/utils/itemUtils.ts` with deduplication.
+- [x] Verify the changes.
+
+
+---
+# 📅 Archive Updated: 2026. 02. 09. 12:44:18
+# 📄 File: task.md
+---
+
+- [x] Investigate `src/utils/regionUtils.ts` and design a fix for "Dong" search (e.g., '구로동' -> '구로제1동').
+- [x] Create `implementation_plan.md` for location search improvement.
+- [x] Update `src/utils/regionUtils.ts` with smart regex logic for administrative dongs.
+- [x] Verify the fix.
+
+
+---
+# 📅 Archive Updated: 2026. 02. 09. 12:46:53
+# 📄 File: task.md
+---
+
+- [x] Create a utility function to format location names (remove '제', numbers, '본', etc. from dong names).
+- [x] Apply this formatter to `WeatherNowCard.tsx` (and potentially `App.tsx` where location name is passed).
+- [x] Verify the display.
+
+
+---
+# 📅 Archive Updated: 2026. 02. 09. 13:01:23
+# 📄 File: task.md
+---
+
+- [x] Add `clearApiCache` function to `src/utils/apiCache.ts`.
+- [x] Update `detectCurrentLocation` in `src/App.tsx` to accept a `force` parameter and clear cache if true.
+- [x] Update `Header.tsx` to include a Refresh Button and accept `onRefresh` prop.
+- [x] Update `App.tsx` to pass the refresh handler to `HeaderLayout`.
+- [x] Verify the implementation.

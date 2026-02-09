@@ -1,5 +1,5 @@
-import regionsData from '../data/regions.json';
-import type { Region } from '../types/region';
+import regionsData from "../data/regions.json";
+import type { Region } from "../types/region";
 
 /**
  * regions.json 데이터 전체 캐싱 (import 시점에 로드됨)
@@ -11,28 +11,53 @@ const allRegions: Region[] = regionsData as Region[];
  * @param keyword 사용자 입력 검색어
  * @param limit 최대 반환 개수 (기본 30개)
  */
+// 정규식 특수문자 이스케이프 함수
+function escapeRegExp(string: string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * 검색어(keyword)를 포함하는 지역(동 단위)을 검색하여 반환
+ * @param keyword 사용자 입력 검색어
+ * @param limit 최대 반환 개수 (기본 30개)
+ */
 export const searchRegions = (keyword: string, limit: number = 30): Region[] => {
-  if (!keyword || keyword.trim() === '') {
+  if (!keyword || keyword.trim() === "") {
     return [];
   }
 
-  const normalizedKeyword = keyword.trim().replace(/\s+/g, '');
+  const normalizedKeyword = keyword.trim().replace(/\s+/g, "");
+
+  // 스마트 동 검색 패턴 생성 (예: '구로동' -> '구로' + '제1' + '동')
+  let smartDongRegex: RegExp | null = null;
+  // 2글자 초과일 때만 동작 (예: "구로동" -> 3글자). "일동" 같은 2글자는 너무 흔해서 제외.
+  if (normalizedKeyword.endsWith("동") && normalizedKeyword.length > 2) {
+    const base = normalizedKeyword.slice(0, -1);
+    // 숫자, 공백, '제', '본', '.', '가' 등 행정동 수식어 허용
+    smartDongRegex = new RegExp(`^${escapeRegExp(base)}[0-9\\s제본\\.]*동$`);
+  }
 
   // 1. 실제 사용자가 선택할 '동/읍/면' 단위가 있는 데이터만 필터링 (노이즈 제거)
-  const candidates = allRegions.filter(region => {
+  const candidates = allRegions.filter((region) => {
     if (!region.s3) return false; // 읍/면/동 정보가 없으면 제외 (구/시 단위 검색 방지)
 
-    const s3Name = region.s3.replace(/\s+/g, '');
-    const fullName = region.name.replace(/\s+/g, '');
+    const s3Name = region.s3.replace(/\s+/g, "");
+    const fullName = region.name.replace(/\s+/g, "");
 
-    return s3Name.includes(normalizedKeyword) || fullName.includes(normalizedKeyword);
+    // A. 기본 포함 검색
+    if (s3Name.includes(normalizedKeyword) || fullName.includes(normalizedKeyword)) return true;
+
+    // B. 스마트 정규식 검색
+    if (smartDongRegex && smartDongRegex.test(s3Name)) return true;
+
+    return false;
   });
 
   // 2. 가중치 기반 정렬 (사용자 의도에 가장 가까운 순서)
   return candidates
     .sort((a, b) => {
-      const aS3 = a.s3.replace(/\s+/g, '');
-      const bS3 = b.s3.replace(/\s+/g, '');
+      const aS3 = a.s3.replace(/\s+/g, "");
+      const bS3 = b.s3.replace(/\s+/g, "");
 
       // A. 읍/면/동 이름이 검색어로 시작하는 경우 최우선 (예: '이동' -> '이동' 먼저, '이화동' 뒤로)
       const aStartsWith = aS3.startsWith(normalizedKeyword);
@@ -57,14 +82,14 @@ export const searchRegions = (keyword: string, limit: number = 30): Region[] => 
  * 격자 좌표 특성상 여러 동이 같은 좌표를 공유할 수 있으므로, 첫 번째 매칭되는 지역을 반환함.
  */
 export const findRegionByNxNy = (nx: number, ny: number): Region | undefined => {
-  return allRegions.find(region => region.nx === nx && region.ny === ny);
+  return allRegions.find((region) => region.nx === nx && region.ny === ny);
 };
 
 /**
  * NX, NY 좌표를 공유하는 모든 지역 리스트 반환
  */
 export const findAllRegionsByNxNy = (nx: number, ny: number): Region[] => {
-  return allRegions.filter(region => region.nx === nx && region.ny === ny);
+  return allRegions.filter((region) => region.nx === nx && region.ny === ny);
 };
 
 /**
@@ -72,11 +97,11 @@ export const findAllRegionsByNxNy = (nx: number, ny: number): Region[] => {
  */
 export const getRegionsInSgg = (s1: string, s2: string): Region[] => {
   const s1Short = s1.slice(0, 2);
-  const s2Clean = s2.replace(/\s+/g, '');
+  const s2Clean = s2.replace(/\s+/g, "");
 
-  return allRegions.filter(region => {
+  return allRegions.filter((region) => {
     const rS1Short = region.s1.slice(0, 2);
-    const rS2Clean = region.s2.replace(/\s+/g, '');
+    const rS2Clean = region.s2.replace(/\s+/g, "");
     return rS1Short === s1Short && rS2Clean.includes(s2Clean);
   });
 };

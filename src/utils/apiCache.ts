@@ -53,12 +53,18 @@ export const setCachedData = <T>(key: string, data: T): void => {
  * @param type 데이터 종류 (weather, dust, etc)
  * @param args 식별 인자들 (좌표, 이름 등)
  */
-export const generateCacheKey = (
-  type: string,
-  ...args: (string | number)[]
-) => {
+export const generateCacheKey = (type: string, ...args: (string | number)[]) => {
   // 시간 단위(시)를 포함하여 매 시간 정각이 지나면 자동으로 키가 바뀌도록 함 (선택적)
   // 여기서는 단순히 인자들을 조합하고, TTL로 관리하므로 시간은 키에 안 넣어도 무방하지만
   // 날씨 데이터 특성상 '발표 시간'이 중요하므로 호출자가 관리하게 둠.
   return `${type}_${args.join("_")}`;
+};
+
+export const clearApiCache = () => {
+  Object.keys(sessionStorage).forEach((key) => {
+    if (key.startsWith(CACHE_PREFIX)) {
+      sessionStorage.removeItem(key);
+    }
+  });
+  console.log("[Cache] Cleared manually.");
 };

@@ -161,7 +161,7 @@ export default function WeatherNowCard({ data, dustData, yesterdayData, forecast
       {/* Location Bar (Inline Style) */}
 
       <div className="flex gap-2 mb-5 justify-between">
-        <strong className="text-lg font-semibold break-keep tracking-tight drop-shadow-sm">{locationName}</strong>
+        <strong className="text-lg font-semibold break-keep tracking-tight drop-shadow-sm">{locationName.replace(/(제?[0-9]+|본)동$/, "동")}</strong>
 
         <div className="flex items-center gap-1.5 self-start">
           <button

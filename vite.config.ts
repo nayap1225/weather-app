@@ -24,9 +24,9 @@ export default defineConfig(({ mode }) => {
           enabled: true,
         },
         manifest: {
-          name: "Weather App",
-          short_name: "Weather",
-          description: "Weather Information App",
+          name: "웨더리프",
+          short_name: "웨더리프",
+          description: "오늘 날씨와 딱 맞는 옷차림을 추천해드려요",
           theme_color: "#ffffff",
           background_color: "#ffffff",
           display: "standalone",

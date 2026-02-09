@@ -128,82 +128,154 @@ export const getRecommendedItems = (cond: ItemConditions): PrepareItem[] => {
   // 2️⃣ 옵셔널 준비물 (Optional) - 있으면 좋음
   // =========================================================
 
-  // ☀️ 자외선 높음 (지수 데이터 없으면 임시로 여름 낮)
-  // UV 데이터가 있으면 쓰고, 없으면 5~8월 낮시간 맑음(SKY 1)일 때 추정? 데이터 넘겨받는다고 가정.
+  // 중복 방지를 위한 Helper
+  const addedIds = new Set<string>();
+  const addOptional = (id: string, name: string, icon: string, reason: string) => {
+    if (addedIds.has(id)) return;
+
+    // 필수 준비물에 이미 있는지도 확인 (선택 사항)
+    // 여기서는 옵셔널끼리의 중복만 방지하거나, 전체 id 중복 방지
+    // 상단 items(필수)에 있는 ID와 겹치는지 확인
+    if (items.some((i) => i.id === id)) return;
+
+    items.push({ id, name, icon, reason, type: "optional" });
+    addedIds.add(id);
+  };
+
+  // ☔ 비 (Rain, Shower, High POP)
+  if (isRaining || isRainForecast) {
+    addOptional("folding_umbrella", "접이식 우산", "🌂", "혹시 모를 상황에 대비하세요");
+    addOptional("extra_socks", "여분 양말", "🧦", "비에 젖을 수 있어요");
+    addOptional("waterproof_pouch", "방수 파우치", "💧", "소지품을 보호하세요");
+  }
+
+  // ☔ 약한 비 (POP 50~59) - '비' 조건(60% 이상)에 안 걸린 경우
+  if (!isRaining && !isRainForecast && (pop >= 50 || ptyCode === 5)) {
+    addOptional("folding_umbrella", "접이식 우산", "🌂", "혹시 모르니 챙기면 좋아요");
+  }
+
+  // ❄️ 눈 / 폭설
+  if (ptyCode === 3 || ptyCode === 2) {
+    addOptional("hotpack", "핫팩", "🔥", "손이 시려울 수 있어요");
+    addOptional("extra_socks", "여분 양말", "🧦", "눈에 젖을 수 있어요");
+  }
+
+  // ❄️ 한파 (영하 10도 이하)
+  if (temp <= -10 || feelsLike <= -12) {
+    addOptional("earmuffs", "귀마개", "🎧", "귀가 시려울 수 있어요");
+    addOptional("beanie", "비니", "🧢", "머리 체온을 지켜주세요");
+    addOptional("hotpack", "핫팩", "🔥", "한파엔 핫팩이 필수예요");
+  }
+
+  // 🔥 폭염 (33도 이상)
+  if (temp >= 33) {
+    addOptional("cool_towel", "쿨타월", "🧣", "더위를 식혀줄 아이템이에요");
+    addOptional("portable_fan", "휴대용 선풍기", "🌬️", "야외 활동 시 유용해요");
+    addOptional("handkerchief", "여분 손수건", "🟦", "땀을 닦을 때 필요해요");
+  }
+
+  // 🌫️ 미세먼지 나쁨 이상 (3, 4)
+  if (pm10Grade >= 3) {
+    addOptional("eye_drops", "인공눈물", "💧", "눈이 뻑뻑할 수 있어요");
+    addOptional("lip_balm", "립밤", "💄", "입술 보호가 필요해요");
+  }
+
+  // ☀️ 자외선 높음 (6 이상)
   if (uvIndex >= 6) {
-    // 높음 기준
-    items.push({
-      id: "uv_care",
-      name: "선글라스/선크림",
-      icon: "🕶️",
-      reason: "자외선 지수가 높아요",
-      type: "optional",
-    });
+    addOptional("sun_cream", "선크림", "🧴", "자외선 차단이 중요해요");
+    addOptional("sunglasses", "선글라스", "🕶️", "눈을 보호하세요");
+    addOptional("hat_brim", "챙 있는 모자", "👒", "햇볕을 가려주세요");
   }
 
-  // 🌡️ 일교차 큼 (>= 10)
-  // User Guide: 여벌 겉옷, 가디건
+  // 🌡️ 일교차 큼 (10도 이상)
   if (diffTemp >= 10) {
-    items.push({
-      id: "cardigan",
-      name: "여벌 겉옷",
-      icon: "🧥",
-      reason: "일교차가 커서 체온 조절이 필요해요",
-      type: "optional",
-    });
+    addOptional("outer", "여벌 겉옷", "🧥", "일교차가 커요");
+    addOptional("cardigan", "가디건", "🧶", "입고 벗기 편한 옷이 좋아요");
+    addOptional("shawl", "숄/스카프", "🧣", "가볍게 걸치기 좋아요");
   }
 
-  // 🌬️ 바람 강함 (>= 9ms)
-  // User Guide: 얇은 스카프, 바람막이
-  // 바람막이는 옷차림에서 추천했으므로 "얇은 스카프" or "휴대용 바람막이"
+  // 🌬️ 바람 강함 (9m/s 이상)
   if (windSpeed >= 9) {
-    items.push({
-      id: "wind_scarf",
-      name: "스카프/바람막이",
-      icon: "🧣",
-      reason: "바람이 차갑게 느껴질 수 있어요",
-      type: "optional",
-    });
+    addOptional("thin_scarf", "얇은 스카프", "🧣", "목을 보호하세요");
+    addOptional("windbreaker", "휴대용 바람막이", "🧥", "바람을 막아주세요");
   }
 
-  // ☔ 약한 비 예보 (POP 30~59 OR 코드 5 빗방울)
-  const isWeakRain = !isRaining && !isRainForecast && (pop >= 30 || ptyCode === 5);
-  if (isWeakRain) {
-    items.push({
-      id: "folding_umbrella",
-      name: "접이식 우산",
-      icon: "🌂",
-      reason: "혹시 모르니 챙기면 좋아요",
-      type: "optional",
-    });
-  }
-
-  // ❄️ 약한 눈 예보
-  // 눈날림(7) or 빗방울눈날림(6)
-  if (ptyCode === 6 || ptyCode === 7) {
-    items.push({
-      id: "hotpack",
-      name: "핫팩",
-      icon: "🔥",
-      reason: "눈발이 날려요. 손 시려울 수 있어요",
-      type: "optional",
-    });
-  }
-
-  // 🌙 밤 외출
-  if (isNight && items.length < 4) {
-    // 너무 많으면 생략
-    // 얇은 겉옷 (일교차랑 겹칠 수 있음 checking)
-    const hasOuter = items.some((i) => i.id === "cardigan");
-    if (!hasOuter && temp < 20) {
-      items.push({
-        id: "night_outer",
-        name: "가벼운 외투",
-        icon: "🧥",
-        reason: "밤에는 쌀쌀할 수 있어요",
-        type: "optional",
-      });
+  // 🌙 밤 외출 (저녁/야간)
+  // 여름밤(25도 이상) 등 너무 더울 땐 제외하는 센스
+  if (isNight) {
+    if (temp < 25) {
+      addOptional("night_outer", "얇은 겉옷", "🧥", "밤공기가 쌀쌀할 수 있어요");
     }
+    if (temp < 15) {
+      addOptional("warm_item", "보온 소품", "🧣", "체온 유지에 신경 쓰세요");
+    }
+  }
+
+  // =========================================================
+  // 3️⃣ 월별/계절별 상시 추천 (Conditions are mild)
+  // =========================================================
+  const month = new Date().getMonth() + 1;
+
+  // 1월 (한겨울)
+  if (month === 1) {
+    addOptional("lip_balm", "립밤", "💄", "입술이 트기 쉬워요");
+    addOptional("hand_cream", "핸드크림", "🙌", "손 보습을 챙기세요");
+  }
+  // 2월 (늦겨울)
+  else if (month === 2) {
+    addOptional("lip_balm", "립밤", "💄", "여전히 건조한 날씨예요");
+    addOptional("hand_cream", "핸드크림", "🙌", "손이 거칠어질 수 있어요");
+  }
+  // 3월 (환절기/황사)
+  else if (month === 3) {
+    addOptional("hand_cream", "핸드크림", "🙌", "환절기라 건조해요");
+    addOptional("mask", "마스크", "😷", "황사와 먼지를 조심하세요");
+  }
+  // 4월 (봄/꽃가루)
+  else if (month === 4) {
+    addOptional("allergy_med", "알러지 약", "💊", "꽃가루 알러지 대비하세요");
+    addOptional("mask", "마스크", "😷", "꽃가루와 먼지 차단!");
+    addOptional("wet_wipes", "물티슈", "🧻", "야외 활동 시 유용해요");
+  }
+  // 5월 (나들이)
+  else if (month === 5) {
+    addOptional("water", "가벼운 물병", "💧", "산책하며 수분 보충하세요");
+    addOptional("wet_wipes", "물티슈", "🧻", "나들이 필수템이에요");
+  }
+  // 6월 (초여름)
+  else if (month === 6) {
+    addOptional("deodorant", "데오드란트", "✨", "땀 냄새 걱정 뚝!");
+    addOptional("powder_sheet", "파우더 시트", "📄", "끈적임 없이 상쾌하게");
+  }
+  // 7월 (장마/무더위)
+  else if (month === 7) {
+    addOptional("tumbler", "텀블러(얼음)", "🧊", "시원한 물을 챙기세요");
+    addOptional("handy_fan", "부채/선풍기", "🌬️", "더위를 날려보세요");
+  }
+  // 8월 (한여름)
+  else if (month === 8) {
+    addOptional("tumbler", "텀블러(얼음)", "🧊", "수분 보충이 중요해요");
+    addOptional("cooling_spray", "쿨링 스프레이", "❄️", "즉각적인 시원함을 느껴보세요");
+  }
+  // 9월 (초가을)
+  else if (month === 9) {
+    addOptional("mist", "미스트", "💦", "피부가 당길 수 있어요");
+    addOptional("thin_cardigan", "얇은 가디건", "🧶", "아침저녁으로 쌀쌀해요");
+  }
+  // 10월 (가을)
+  else if (month === 10) {
+    addOptional("hand_cream", "핸드크림", "🙌", "보습이 필요한 계절이에요");
+    addOptional("lip_balm", "립밤", "💄", "입술을 촉촉하게");
+  }
+  // 11월 (늦가을)
+  else if (month === 11) {
+    addOptional("hand_cream", "핸드크림", "🙌", "손이 시리고 건조해요");
+    addOptional("warm_eyemask", "온열 안대", "😴", "눈의 피로를 풀어주세요");
+  }
+  // 12월 (겨울)
+  else if (month === 12) {
+    addOptional("lip_balm", "립밤", "💄", "겨울철 필수템!");
+    addOptional("hotpack", "핫팩", "🔥", "주머니 속 따뜻함");
   }
 
   return items;

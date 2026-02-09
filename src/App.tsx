@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { clearApiCache } from "./utils/apiCache";
 import LocationPicker from "./components/LocationPicker";
 import WeatherNowCard from "./components/WeatherNowCard";
 import WeatherDetailCard from "./components/WeatherDetailCard";
@@ -262,78 +263,85 @@ function App() {
     }
   }, []);
 
-  const detectCurrentLocation = useCallback(async () => {
-    if (!navigator.geolocation) {
-      alert("브라우저가 위치 정보를 지원하지 않습니다.");
-      return;
-    }
+  const detectCurrentLocation = useCallback(
+    async (forceRefresh = false) => {
+      if (!navigator.geolocation) {
+        alert("브라우저가 위치 정보를 지원하지 않습니다.");
+        return;
+      }
 
-    setGpsLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        const { nx: currentNx, ny: currentNy } = dfs_xy_conv(latitude, longitude);
+      if (forceRefresh) {
+        clearApiCache();
+      }
 
-        try {
-          const kakaoAddr = await getAddressFromCoords(latitude, longitude);
+      setGpsLoading(true);
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          const { nx: currentNx, ny: currentNy } = dfs_xy_conv(latitude, longitude);
 
-          if (kakaoAddr) {
-            const parts = kakaoAddr.split(" ");
-            const dongName = parts[parts.length - 1];
-            const searchResults = searchRegions(dongName, 10);
+          try {
+            const kakaoAddr = await getAddressFromCoords(latitude, longitude);
 
-            const matched = searchResults.find((r: Region) => kakaoAddr.includes(r.s1.slice(0, 2)) && kakaoAddr.includes(r.s2)) || searchResults[0];
+            if (kakaoAddr) {
+              const parts = kakaoAddr.split(" ");
+              const dongName = parts[parts.length - 1];
+              const searchResults = searchRegions(dongName, 10);
 
-            if (matched) {
-              handleLocationChange(matched.nx, matched.ny, matched);
-              handleSearch(matched.nx, matched.ny, matched);
+              const matched = searchResults.find((r: Region) => kakaoAddr.includes(r.s1.slice(0, 2)) && kakaoAddr.includes(r.s2)) || searchResults[0];
+
+              if (matched) {
+                handleLocationChange(matched.nx, matched.ny, matched);
+                handleSearch(matched.nx, matched.ny, matched);
+              } else {
+                const virtualRegion: Region = {
+                  nx: currentNx,
+                  ny: currentNy,
+                  name: `${kakaoAddr} (현재위치)`,
+                  s1: parts[0] || "",
+                  s2: parts[1] || "",
+                  s3: parts[2] || "",
+                  code: "GPS_VIRTUAL",
+                };
+                handleLocationChange(currentNx, currentNy, virtualRegion);
+                handleSearch(currentNx, currentNy, virtualRegion);
+              }
             } else {
-              const virtualRegion: Region = {
-                nx: currentNx,
-                ny: currentNy,
-                name: `${kakaoAddr} (현재위치)`,
-                s1: parts[0] || "",
-                s2: parts[1] || "",
-                s3: parts[2] || "",
-                code: "GPS_VIRTUAL",
-              };
-              handleLocationChange(currentNx, currentNy, virtualRegion);
-              handleSearch(currentNx, currentNy, virtualRegion);
-            }
-          } else {
-            const matchedRegions = findAllRegionsByNxNy(currentNx, currentNy);
-            const bestMatch = matchedRegions.find((r) => r.s3 && r.s2) || matchedRegions[0];
+              const matchedRegions = findAllRegionsByNxNy(currentNx, currentNy);
+              const bestMatch = matchedRegions.find((r) => r.s3 && r.s2) || matchedRegions[0];
 
-            if (bestMatch) {
-              const gpsRegion = {
-                ...bestMatch,
-                name: `${bestMatch.name} (현재위치)`,
-              };
-              handleLocationChange(currentNx, currentNy, gpsRegion);
-              handleSearch(currentNx, currentNy, gpsRegion);
-            } else {
-              handleLocationChange(currentNx, currentNy);
-              handleSearch(currentNx, currentNy);
+              if (bestMatch) {
+                const gpsRegion = {
+                  ...bestMatch,
+                  name: `${bestMatch.name} (현재위치)`,
+                };
+                handleLocationChange(currentNx, currentNy, gpsRegion);
+                handleSearch(currentNx, currentNy, gpsRegion);
+              } else {
+                handleLocationChange(currentNx, currentNy);
+                handleSearch(currentNx, currentNy);
+              }
             }
+          } catch (err) {
+            console.error("[App] GPS Resolution Error:", err);
+            handleSearch(currentNx, currentNy);
           }
-        } catch (err) {
-          console.error("[App] GPS Resolution Error:", err);
-          handleSearch(currentNx, currentNy);
-        }
-        setGpsLoading(false);
-      },
-      (error) => {
-        console.error("[GPS] Error:", error);
-        alert(`위치 정보를 가져오지 못했습니다: ${error.message}`);
-        setGpsLoading(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0,
-      },
-    );
-  }, [handleLocationChange, handleSearch]);
+          setGpsLoading(false);
+        },
+        (error) => {
+          console.error("[GPS] Error:", error);
+          alert(`위치 정보를 가져오지 못했습니다: ${error.message}`);
+          setGpsLoading(false);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 0,
+        },
+      );
+    },
+    [handleLocationChange, handleSearch],
+  );
 
   useEffect(() => {
     // [개선] 앱 초기 진입 시 자동 위치 감지
@@ -371,9 +379,9 @@ function App() {
       <WeatherBackground weatherData={weatherData || []} dustData={dustData} nx={nx} ny={ny} onThemeChange={setTextColor} />
 
       <div className="flex flex-col flex-auto items-center w-full max-w-md mx-auto px-4 py-8 rounded-[1rem] backdrop-blur-[3px] transition-colors duration-500 bg-white/10 border border-white/5">
-        <HeaderLayout />
+        <HeaderLayout onRefresh={() => detectCurrentLocation(true)} isLoading={gpsLoading || loading} />
 
-        <main className="w-full max-w-md">
+        <main className="w-full max-w-md flex-1">
           {/* 인라인 검색창 제거 (이제 팝업으로 통합) */}
 
           {error && (
@@ -461,11 +469,19 @@ function App() {
                 const diffTemp = minTemp !== undefined && maxTemp !== undefined ? maxTemp - minTemp : 0;
                 const currentHour = new Date().getHours();
 
-                // 강수확률(POP) 최대값 추출 (향후 6~12시간?)
+                // 강수확률(POP) 최대값 추출 (오늘 하루 기준)
+                // [Fix] 기존엔 3일치 전체에서 max를 찾느라 내일 비가 와도 오늘 우산을 추천했음.
+                // 따라서 오늘 날짜(YYYYMMDD)와 일치하는 예보만 필터링.
                 let maxPop = 0;
                 if (forecastData) {
-                  const pops = forecastData.filter((i) => i.category === "POP").map((i) => Number(i.fcstValue));
-                  if (pops.length > 0) maxPop = Math.max(...pops);
+                  const today = new Date();
+                  const todayStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, "0")}${String(today.getDate()).padStart(2, "0")}`;
+
+                  const todayPops = forecastData.filter((i) => i.category === "POP" && i.fcstDate === todayStr).map((i) => Number(i.fcstValue));
+
+                  if (todayPops.length > 0) {
+                    maxPop = Math.max(...todayPops);
+                  }
                 }
 
                 const itemConditions = {
