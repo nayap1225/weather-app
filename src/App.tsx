@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { clearApiCache } from "./utils/apiCache";
 import LocationPicker from "./components/LocationPicker";
 import WeatherNowCard from "./components/WeatherNowCard";
@@ -14,9 +14,24 @@ import WeatherBackground from "./components/WeatherBackground";
 import HeaderLayout from "./components/layout/Header";
 import { dfs_xy_conv } from "./utils/coordinateConverter";
 import { getAddressFromCoords } from "./api/kakao";
-import { getUltraSrtNcst, getVilageFcst, getMidLandFcst, getMidTa, getYesterdayNcst, getUltraSrtFcst } from "./api/weather";
-import { getDustInfo, getNearbyStationWithDust, getDustInfoBySgg } from "./api/dust";
-import { findAllRegionsByNxNy, getRegionsInSgg, searchRegions } from "./utils/regionUtils";
+import {
+  getUltraSrtNcst,
+  getVilageFcst,
+  getMidLandFcst,
+  getMidTa,
+  getYesterdayNcst,
+  getUltraSrtFcst,
+} from "./api/weather";
+import {
+  getDustInfo,
+  getNearbyStationWithDust,
+  getDustInfoBySgg,
+} from "./api/dust";
+import {
+  findAllRegionsByNxNy,
+  getRegionsInSgg,
+  searchRegions,
+} from "./utils/regionUtils";
 import { getMidTermCode } from "./data/midTermCodes";
 import { mergeForecastData } from "./utils/dailyForecastUtils";
 import { calculateFeelsLike } from "./utils/weatherUtils"; // [New]
@@ -36,7 +51,9 @@ function App() {
   const [midLandData, setMidLandData] = useState<MidLandItem | null>(null);
   const [midTaData, setMidTaData] = useState<MidTaItem | null>(null);
   const [dustData, setDustData] = useState<DustItem | null>(null);
-  const [yesterdayData, setYesterdayData] = useState<WeatherItem[] | null>(null);
+  const [yesterdayData, setYesterdayData] = useState<WeatherItem[] | null>(
+    null,
+  );
 
   const [loading, setLoading] = useState<boolean>(false);
   const [dustLoading, setDustLoading] = useState<boolean>(false);
@@ -65,7 +82,9 @@ function App() {
 
       if (explicitRegion) {
         setSelectedRegion(explicitRegion);
-        console.log(`[Weather App] Searching weather for: ${explicitRegion.name}`);
+        console.log(
+          `[Weather App] Searching weather for: ${explicitRegion.name}`,
+        );
       }
 
       try {
@@ -102,17 +121,26 @@ function App() {
           // 실황이 구버전(1시간 전)일 때만 초단기예보로 보정
           if (obsBaseTime !== curHour) {
             // 현재 시각에 해당하는 초단기예보 찾기
-            const currentForecasts = ufData.filter((item) => item.fcstDate === curDate && item.fcstTime === curHour);
+            const currentForecasts = ufData.filter(
+              (item) => item.fcstDate === curDate && item.fcstTime === curHour,
+            );
 
             if (currentForecasts.length > 0) {
-              console.log(`[App] Correcting weather data with forecast for ${curHour}`);
+              console.log(
+                `[App] Correcting weather data with forecast for ${curHour}`,
+              );
               isForecastUsed = true;
 
               currentForecasts.forEach((fcst) => {
                 // 보정할 카테고리: 기온(T1H), 하늘(SKY), 강수(PTY), 습도(REH)
-                if (!["T1H", "SKY", "PTY", "REH", "RN1"].includes(fcst.category)) return;
+                if (
+                  !["T1H", "SKY", "PTY", "REH", "RN1"].includes(fcst.category)
+                )
+                  return;
 
-                const targetIndex = wData.findIndex((w) => w.category === fcst.category);
+                const targetIndex = wData.findIndex(
+                  (w) => w.category === fcst.category,
+                );
                 const newValue = fcst.fcstValue || "";
 
                 if (targetIndex !== -1) {
@@ -143,19 +171,29 @@ function App() {
         let targetRegion: Region | undefined;
         if (explicitRegion) {
           targetRegion = explicitRegion;
-        } else if (selectedRegion && selectedRegion.nx === searchNx && selectedRegion.ny === searchNy) {
+        } else if (
+          selectedRegion &&
+          selectedRegion.nx === searchNx &&
+          selectedRegion.ny === searchNy
+        ) {
           targetRegion = selectedRegion;
         } else {
           const regions = findAllRegionsByNxNy(searchNx, searchNy);
           targetRegion = regions.find((r) => r.s2 && r.s2.trim() !== "");
         }
 
-        const cityRegion = findAllRegionsByNxNy(searchNx, searchNy).find((r) => r.s1 && r.s1.trim() !== "");
+        const cityRegion = findAllRegionsByNxNy(searchNx, searchNy).find(
+          (r) => r.s1 && r.s1.trim() !== "",
+        );
 
         let dustInfo: DustItem | null = null;
         if (targetRegion) {
           try {
-            dustInfo = await getNearbyStationWithDust(targetRegion.s3 || "", targetRegion.s1 || "", targetRegion.s2 || "");
+            dustInfo = await getNearbyStationWithDust(
+              targetRegion.s3 || "",
+              targetRegion.s1 || "",
+              targetRegion.s2 || "",
+            );
           } catch (e) {
             console.error("[App] Nearby station dust tracking failed:", e);
           }
@@ -166,13 +204,16 @@ function App() {
           if (targetRegion.s3) stationCandidates.push(targetRegion.s3);
           if (targetRegion.s2) {
             stationCandidates.push(targetRegion.s2);
-            const complexMatch = targetRegion.s2.match(/^([가-힣]+시)([가-힣]+[구군])$/);
+            const complexMatch = targetRegion.s2.match(
+              /^([가-힣]+시)([가-힣]+[구군])$/,
+            );
             if (complexMatch) {
               stationCandidates.push(complexMatch[2]);
               stationCandidates.push(complexMatch[1]);
             } else {
               const shortName = targetRegion.s2.replace(/(시|군|구)$/, "");
-              if (shortName !== targetRegion.s2) stationCandidates.push(shortName);
+              if (shortName !== targetRegion.s2)
+                stationCandidates.push(shortName);
             }
           }
           if (targetRegion.s2) {
@@ -182,13 +223,21 @@ function App() {
               stationCandidates.push(cityOnly.replace(/시$/, ""));
             }
           }
-          if (targetRegion.s2?.includes("울릉")) stationCandidates.push("울릉읍");
-          const finalCandidates = Array.from(new Set(stationCandidates.filter(Boolean)));
+          if (targetRegion.s2?.includes("울릉"))
+            stationCandidates.push("울릉읍");
+          const finalCandidates = Array.from(
+            new Set(stationCandidates.filter(Boolean)),
+          );
 
           for (const name of finalCandidates) {
             try {
               const result = await getDustInfo(name);
-              if (result && result.pm10Value && result.pm10Value !== "-" && result.pm10Value !== "") {
+              if (
+                result &&
+                result.pm10Value &&
+                result.pm10Value !== "-" &&
+                result.pm10Value !== ""
+              ) {
                 dustInfo = result;
                 break;
               }
@@ -201,7 +250,11 @@ function App() {
             try {
               const umdName = targetRegion.s3 || targetRegion.s2 || "";
               if (umdName) {
-                const nearbyResult = await getNearbyStationWithDust(umdName, targetRegion.s1, targetRegion.s2);
+                const nearbyResult = await getNearbyStationWithDust(
+                  umdName,
+                  targetRegion.s1,
+                  targetRegion.s2,
+                );
                 if (nearbyResult) {
                   dustInfo = nearbyResult;
                 }
@@ -213,9 +266,18 @@ function App() {
 
           if (!dustInfo) {
             try {
-              const neighbors = getRegionsInSgg(targetRegion.s1, targetRegion.s2);
-              const neighborNames = Array.from(new Set(neighbors.map((r: Region) => r.s3).filter(Boolean)));
-              const sggResult = await getDustInfoBySgg(targetRegion.s1, targetRegion.s2, neighborNames);
+              const neighbors = getRegionsInSgg(
+                targetRegion.s1,
+                targetRegion.s2,
+              );
+              const neighborNames = Array.from(
+                new Set(neighbors.map((r: Region) => r.s3).filter(Boolean)),
+              );
+              const sggResult = await getDustInfoBySgg(
+                targetRegion.s1,
+                targetRegion.s2,
+                neighborNames,
+              );
               if (sggResult) {
                 dustInfo = sggResult;
               }
@@ -234,7 +296,10 @@ function App() {
         if (cityRegion) {
           const codes = getMidTermCode(cityRegion.s1);
           try {
-            const [landRes, taRes] = await Promise.all([getMidLandFcst(codes.landCode), getMidTa(codes.tempCode)]);
+            const [landRes, taRes] = await Promise.all([
+              getMidLandFcst(codes.landCode),
+              getMidTa(codes.tempCode),
+            ]);
             setMidLandData(landRes);
             setMidTaData(taRes);
           } catch (e) {
@@ -245,7 +310,10 @@ function App() {
         // 검색 성공 시 처리
       } catch (err) {
         console.error(err);
-        const errorMessage = err instanceof Error ? err.message : "정보를 불러오는데 실패했습니다.";
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "정보를 불러오는데 실패했습니다.";
         setError(errorMessage);
       } finally {
         setLoading(false);
@@ -255,18 +323,40 @@ function App() {
     [nx, ny, selectedRegion],
   );
 
-  const handleLocationChange = useCallback((newNx: number, newNy: number, region?: Region) => {
-    setNx(newNx);
-    setNy(newNy);
-    if (region) {
-      setSelectedRegion(region);
-    }
-  }, []);
+  const handleLocationChange = useCallback(
+    (newNx: number, newNy: number, region?: Region) => {
+      setNx(newNx);
+      setNy(newNy);
+      if (region) {
+        setSelectedRegion(region);
+      }
+    },
+    [],
+  );
 
   const detectCurrentLocation = useCallback(
     async (forceRefresh = false) => {
+      // 위치 권한 거부, 지원 안함 등의 실패 시 기본으로 사용할 종로구 지역 정보
+      const fallbackToDefaultLocation = () => {
+        const defaultRegion: Region = {
+          nx: 60,
+          ny: 127,
+          name: "서울특별시 종로구",
+          s1: "서울특별시",
+          s2: "종로구",
+          s3: "", // 종로구 전체
+          code: "1111000000",
+        };
+        handleLocationChange(60, 127, defaultRegion);
+        handleSearch(60, 127, defaultRegion);
+        setGpsLoading(false);
+      };
+
       if (!navigator.geolocation) {
-        alert("브라우저가 위치 정보를 지원하지 않습니다.");
+        alert(
+          "브라우저가 위치 정보를 지원하지 않습니다. 기본 위치로 설정합니다.",
+        );
+        fallbackToDefaultLocation();
         return;
       }
 
@@ -278,7 +368,10 @@ function App() {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
-          const { nx: currentNx, ny: currentNy } = dfs_xy_conv(latitude, longitude);
+          const { nx: currentNx, ny: currentNy } = dfs_xy_conv(
+            latitude,
+            longitude,
+          );
 
           try {
             const kakaoAddr = await getAddressFromCoords(latitude, longitude);
@@ -288,7 +381,12 @@ function App() {
               const dongName = parts[parts.length - 1];
               const searchResults = searchRegions(dongName, 10);
 
-              const matched = searchResults.find((r: Region) => kakaoAddr.includes(r.s1.slice(0, 2)) && kakaoAddr.includes(r.s2)) || searchResults[0];
+              const matched =
+                searchResults.find(
+                  (r: Region) =>
+                    kakaoAddr.includes(r.s1.slice(0, 2)) &&
+                    kakaoAddr.includes(r.s2),
+                ) || searchResults[0];
 
               if (matched) {
                 handleLocationChange(matched.nx, matched.ny, matched);
@@ -308,7 +406,8 @@ function App() {
               }
             } else {
               const matchedRegions = findAllRegionsByNxNy(currentNx, currentNy);
-              const bestMatch = matchedRegions.find((r) => r.s3 && r.s2) || matchedRegions[0];
+              const bestMatch =
+                matchedRegions.find((r) => r.s3 && r.s2) || matchedRegions[0];
 
               if (bestMatch) {
                 const gpsRegion = {
@@ -330,8 +429,9 @@ function App() {
         },
         (error) => {
           console.error("[GPS] Error:", error);
-          alert(`위치 정보를 가져오지 못했습니다: ${error.message}`);
-          setGpsLoading(false);
+          // Only show alert and then fallback
+          alert(`위치 정보를 가져오지 못했습니다. 기본 위치로 설정합니다.`);
+          fallbackToDefaultLocation();
         },
         {
           enableHighAccuracy: true,
@@ -343,21 +443,34 @@ function App() {
     [handleLocationChange, handleSearch],
   );
 
+  const hasRequestedLocation = useRef(false);
+
   useEffect(() => {
     // [개선] 앱 초기 진입 시 자동 위치 감지
-    // 빈 배열을 사용하여 마운트 시 한 번만 실행되도록 보장 (무한 루프 방지)
-    detectCurrentLocation();
-  }, []); // 의존성에서 detectCurrentLocation 제거
+    // Strict Mode에서 두 번 호출되는 것을 방지하기 위해 ref 사용
+    if (!hasRequestedLocation.current) {
+      hasRequestedLocation.current = true;
+      detectCurrentLocation();
+    }
+  }, [detectCurrentLocation]);
 
   useEffect(() => {
     // [중요] 사용자가 이미 선택한 정보가 있고, 그 정보의 좌표가 현재 상태(nx, ny)와 일치한다면
     // 굳이 격자 기반 동네 목록으로 다시 덮어쓰지 않음 (검색 결과 유지)
-    if (selectedRegion && selectedRegion.nx === nx && selectedRegion.ny === ny) {
+    if (
+      selectedRegion &&
+      selectedRegion.nx === nx &&
+      selectedRegion.ny === ny
+    ) {
       return;
     }
 
     // GPS 결과이거나 '(현재위치)' 표기가 있는 경우도 보호
-    if (selectedRegion && (selectedRegion.code === "GPS_VIRTUAL" || selectedRegion.name.includes("(현재위치)"))) {
+    if (
+      selectedRegion &&
+      (selectedRegion.code === "GPS_VIRTUAL" ||
+        selectedRegion.name.includes("(현재위치)"))
+    ) {
       return;
     }
 
@@ -375,11 +488,22 @@ function App() {
   const textClass = textColor === "light" ? "text-white" : "text-slate-900";
 
   return (
-    <div className={`min-h-screen flex flex-col items-center p-4 transition-colors duration-500 ${textClass}`}>
-      <WeatherBackground weatherData={weatherData || []} dustData={dustData} nx={nx} ny={ny} onThemeChange={setTextColor} />
+    <div
+      className={`min-h-screen flex flex-col items-center p-4 transition-colors duration-500 ${textClass}`}
+    >
+      <WeatherBackground
+        weatherData={weatherData || []}
+        dustData={dustData}
+        nx={nx}
+        ny={ny}
+        onThemeChange={setTextColor}
+      />
 
       <div className="flex flex-col flex-auto items-center w-full max-w-md mx-auto px-4 py-8 rounded-[1rem] backdrop-blur-[3px] transition-colors duration-500 bg-white/10 border border-white/5">
-        <HeaderLayout onRefresh={() => detectCurrentLocation(true)} isLoading={gpsLoading || loading} />
+        <HeaderLayout
+          onRefresh={() => detectCurrentLocation(true)}
+          isLoading={gpsLoading || loading}
+        />
 
         <main className="w-full max-w-md flex-1">
           {/* 인라인 검색창 제거 (이제 팝업으로 통합) */}
@@ -408,7 +532,12 @@ function App() {
 
               <DustCard dust={dustData} loading={dustLoading} />
 
-              <WeatherDetailCard weatherData={weatherData} forecastData={forecastData} nx={nx} ny={ny} />
+              <WeatherDetailCard
+                weatherData={weatherData}
+                forecastData={forecastData}
+                nx={nx}
+                ny={ny}
+              />
 
               {(() => {
                 // 옷차림 추천을 위한 데이터 구성
@@ -433,7 +562,9 @@ function App() {
 
                 // 강수형태 (코드값 문자열)
                 const ptyItem = weatherData.find((i) => i.category === "PTY");
-                const ptyCode = ptyItem ? ptyItem.obsrValue || ptyItem.fcstValue || "0" : "0";
+                const ptyCode = ptyItem
+                  ? ptyItem.obsrValue || ptyItem.fcstValue || "0"
+                  : "0";
 
                 const conditions = {
                   currentTemp,
@@ -462,11 +593,16 @@ function App() {
                 const windSpeed = getValue("WSD");
                 const feelsLike = calculateFeelsLike(currentTemp, windSpeed);
                 const ptyItem = weatherData.find((i) => i.category === "PTY");
-                const ptyCode = ptyItem ? Number(ptyItem.obsrValue || ptyItem.fcstValue || "0") : 0;
+                const ptyCode = ptyItem
+                  ? Number(ptyItem.obsrValue || ptyItem.fcstValue || "0")
+                  : 0;
 
                 const minTemp = weeklyData?.[0]?.minTemp;
                 const maxTemp = weeklyData?.[0]?.maxTemp;
-                const diffTemp = minTemp !== undefined && maxTemp !== undefined ? maxTemp - minTemp : 0;
+                const diffTemp =
+                  minTemp !== undefined && maxTemp !== undefined
+                    ? maxTemp - minTemp
+                    : 0;
                 const currentHour = new Date().getHours();
 
                 // 강수확률(POP) 최대값 추출 (오늘 하루 기준)
@@ -477,7 +613,11 @@ function App() {
                   const today = new Date();
                   const todayStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, "0")}${String(today.getDate()).padStart(2, "0")}`;
 
-                  const todayPops = forecastData.filter((i) => i.category === "POP" && i.fcstDate === todayStr).map((i) => Number(i.fcstValue));
+                  const todayPops = forecastData
+                    .filter(
+                      (i) => i.category === "POP" && i.fcstDate === todayStr,
+                    )
+                    .map((i) => Number(i.fcstValue));
 
                   if (todayPops.length > 0) {
                     maxPop = Math.max(...todayPops);
@@ -515,7 +655,11 @@ function App() {
                   <div className="w-28 h-28 bg-gradient-to-tr from-blue-500 to-indigo-600 rounded-[1rem] flex items-center justify-center mx-auto mb-8 shadow-lg shadow-blue-500/30 animate-bounce">
                     <i className="block w-22 h-22 bg-[url(/src/assets/gurumi.svg)] bg-no-repeat bg-center bg-cover"></i>
                   </div>
-                  <h2 className="font-semibold text-[18px] text-gray-800 mb-3 tracking-tighter">{gpsLoading ? "위치 정보를 받아오고 있어요" : "기상 정보를 가져오고 있어요"}</h2>
+                  <h2 className="font-semibold text-[18px] text-gray-800 mb-3 tracking-tighter">
+                    {gpsLoading
+                      ? "위치 정보를 받아오고 있어요"
+                      : "기상 정보를 가져오고 있어요"}
+                  </h2>
                   <p className="text-gray-500 text-[14px] font-bold leading-relaxed px-4">
                     {gpsLoading ? (
                       <>
@@ -531,7 +675,9 @@ function App() {
                   </p>
                   <div className="mt-8 flex items-center justify-center gap-2">
                     <span className="w-2 h-2 bg-blue-700 rounded-full animate-ping"></span>
-                    <span className="text-[10px] text-blue-500 font-black uppercase tracking-[0.2em]">{gpsLoading ? "Locating..." : "Loading..."}</span>
+                    <span className="text-[10px] text-blue-500 font-black uppercase tracking-[0.2em]">
+                      {gpsLoading ? "Locating..." : "Loading..."}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -541,13 +687,18 @@ function App() {
           {!weatherData && !loading && !error && null}
         </main>
 
-        <footer className="mt-4 opacity-40 text-[10px] text-center uppercase tracking-widest font-bold">&copy; {new Date().getFullYear()} Weatherleaf</footer>
+        <footer className="mt-4 opacity-40 text-[10px] text-center uppercase tracking-widest font-bold">
+          &copy; {new Date().getFullYear()} Weatherleaf
+        </footer>
       </div>
 
       {/* 위치 검색 팝업 (모달) */}
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowModal(false)}></div>
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowModal(false)}
+          ></div>
           <div className="relative w-full max-w-md animate-in fade-in zoom-in duration-200">
             <LocationPicker
               nx={nx}
