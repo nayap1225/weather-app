@@ -12,6 +12,7 @@ import InstallPrompt from "./components/InstallPrompt";
 import GoogleAd from "./components/GoogleAd";
 import WeatherBackground from "./components/WeatherBackground";
 import HeaderLayout from "./components/layout/Header";
+import Alert from "./components/common/Alert";
 import { dfs_xy_conv } from "./utils/coordinateConverter";
 import { getAddressFromCoords } from "./api/kakao";
 import {
@@ -61,6 +62,7 @@ function App() {
   const [showModal, setShowModal] = useState<boolean>(false);
   const [gpsLoading, setGpsLoading] = useState<boolean>(false);
   const [isForecastMode, setIsForecastMode] = useState<boolean>(false);
+  const [gpsAlertMsg, setGpsAlertMsg] = useState<string | null>(null);
 
   const handleSearch = useCallback(
     async (targetNx?: number, targetNy?: number, explicitRegion?: Region) => {
@@ -353,7 +355,7 @@ function App() {
       };
 
       if (!navigator.geolocation) {
-        alert(
+        setGpsAlertMsg(
           "브라우저가 위치 정보를 지원하지 않습니다. 기본 위치로 설정합니다.",
         );
         fallbackToDefaultLocation();
@@ -430,7 +432,9 @@ function App() {
         (error) => {
           console.error("[GPS] Error:", error);
           // Only show alert and then fallback
-          alert(`위치 정보를 가져오지 못했습니다. 기본 위치로 설정합니다.`);
+          setGpsAlertMsg(
+            "위치 정보를 가져오지 못했습니다. 기본 위치로 설정합니다.",
+          );
           fallbackToDefaultLocation();
         },
         {
@@ -715,6 +719,14 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* GPS 에러 디자인 알림 로직 */}
+      <Alert
+        isOpen={!!gpsAlertMsg}
+        title="위치 정보 알림"
+        message={gpsAlertMsg}
+        onConfirm={() => setGpsAlertMsg(null)}
+      />
     </div>
   );
 }

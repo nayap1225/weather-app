@@ -20,6 +20,7 @@ export const usePWAInstall = () => {
   const [isInstallable, setIsInstallable] = useState(!!capturedPrompt);
   const [isStandalone, setIsStandalone] = useState(false);
   const [isIOS, setIsIOS] = useState(false); // [추가] iOS/Safari 수동 설치 가이드 제공을 위한 상태
+  const [installAlertMsg, setInstallAlertMsg] = useState<string | null>(null);
 
   useEffect(() => {
     // 현재 독립 실행형(앱) 모드인지 확인
@@ -84,7 +85,7 @@ export const usePWAInstall = () => {
     const promptToUse = deferredPrompt || capturedPrompt;
 
     if (!promptToUse) {
-      alert(
+      setInstallAlertMsg(
         '설치 준비 중입니다. 잠시만 기다려 주세요. \n\n보통 앱 삭제 직후에는 브라우저 정책상 잠시 차단될 수 있습니다. \n잠시 후 다시 시도하시거나, 브라우저 메뉴의 "홈 화면에 추가"를 이용해 주세요.',
       );
       return;
@@ -105,5 +106,12 @@ export const usePWAInstall = () => {
     }
   };
 
-  return { isInstallable, isStandalone, isIOS, installPWA };
+  return {
+    isInstallable,
+    isStandalone,
+    isIOS,
+    installPWA,
+    installAlertMsg,
+    setInstallAlertMsg,
+  };
 };

@@ -1,7 +1,15 @@
 import { usePWAInstall } from "../hooks/usePWAInstall";
+import Alert from "./common/Alert";
 
 export default function InstallPrompt() {
-  const { isInstallable, isStandalone, isIOS, installPWA } = usePWAInstall();
+  const {
+    isInstallable,
+    isStandalone,
+    isIOS,
+    installPWA,
+    installAlertMsg,
+    setInstallAlertMsg,
+  } = usePWAInstall();
 
   // [PWA 고도화]
   // 1. 이미 앱으로 실행 중이면 UI 숨김 (isStandalone)
@@ -16,7 +24,9 @@ export default function InstallPrompt() {
     return (
       <div className="mt-4 p-5 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl shadow-xl animate-fade-in text-white">
         <div className="flex items-center gap-4 mb-4">
-          <div className="bg-white/20 p-2 rounded-xl text-2xl shadow-inner">📱</div>
+          <div className="bg-white/20 p-2 rounded-xl text-2xl shadow-inner">
+            📱
+          </div>
           <div>
             <h4 className="font-bold">앱으로 설치해서 사용하세요</h4>
             <p className="text-xs opacity-90 leading-relaxed">
@@ -26,9 +36,19 @@ export default function InstallPrompt() {
           </div>
         </div>
 
-        <button onClick={installPWA} className="w-full py-3 bg-white text-blue-600 rounded-xl font-bold transition-all shadow-lg active:scale-[0.98] hover:bg-blue-50">
+        <button
+          onClick={installPWA}
+          className="w-full py-3 bg-white text-blue-600 rounded-xl font-bold transition-all shadow-lg active:scale-[0.98] hover:bg-blue-50"
+        >
           앱 설치하기
         </button>
+
+        <Alert
+          isOpen={!!installAlertMsg}
+          title="앱 설치 안내"
+          message={installAlertMsg}
+          onConfirm={() => setInstallAlertMsg(null)}
+        />
       </div>
     );
   }
@@ -38,28 +58,54 @@ export default function InstallPrompt() {
     return (
       <div className="mt-8 mb-4 p-5 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl shadow-xl animate-fade-in text-white">
         <div className="flex items-center gap-4 mb-3">
-          <div className="bg-white/20 p-2 rounded-xl text-2xl shadow-inner">🍎</div>
+          <div className="bg-white/20 p-2 rounded-xl text-2xl shadow-inner">
+            🍎
+          </div>
           <div>
             <h4 className="font-bold text-base">iPhone 설치 방법</h4>
-            <p className="text-xs opacity-90 leading-relaxed">사파리 브라우저에서 아래 과정을 따라주세요!</p>
+            <p className="text-xs opacity-90 leading-relaxed">
+              사파리 브라우저에서 아래 과정을 따라주세요!
+            </p>
           </div>
         </div>
 
         <div className="bg-black/10 border border-white/10 rounded-xl p-3 text-sm space-y-2">
           <div className="flex items-center gap-2">
-            <span className="bg-white/20 w-5 h-5 rounded-full flex items-center justify-center text-[10px]">1</span>
+            <span className="bg-white/20 w-5 h-5 rounded-full flex items-center justify-center text-[10px]">
+              1
+            </span>
             <span>
               하단 <b>공유 버튼</b>( <span className="text-lg">⎋</span> )을 클릭
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="bg-white/20 w-5 h-5 rounded-full flex items-center justify-center text-[10px]">2</span>
+            <span className="bg-white/20 w-5 h-5 rounded-full flex items-center justify-center text-[10px]">
+              2
+            </span>
             <span>
               스크롤을 내려 <b>'홈 화면에 추가'</b> 클릭
             </span>
           </div>
         </div>
+        <Alert
+          isOpen={!!installAlertMsg}
+          title="앱 설치 안내"
+          message={installAlertMsg}
+          onConfirm={() => setInstallAlertMsg(null)}
+        />
       </div>
+    );
+  }
+
+  // UI가 아무것도 없더라도 Alert 자체는 띄울 수 있도록 처리
+  if (installAlertMsg) {
+    return (
+      <Alert
+        isOpen={!!installAlertMsg}
+        title="앱 설치 안내"
+        message={installAlertMsg}
+        onConfirm={() => setInstallAlertMsg(null)}
+      />
     );
   }
 
